@@ -337,14 +337,14 @@ d[d$site=="W1","Site"]<-"W1 Calcium treatment"
 d$Variable<-factor(d$Variable, levels=c("Mean annual Ca","Mean annual SiO2","Mean annual pH","Mean annual ANC","Mean annual Al", "Mean annual DOC" ))
 
 # this shows all the data available for nitrate for the stream gauge in watershed 6
-dd<-ggplot(d, aes(x=waterYr, y=value ,group=Site, col=Site))+geom_point(aes(shape=Site))+geom_line()+
+dd<-ggplot(d, aes(x=waterYr, y=value , col=Site))+geom_point(aes(shape=Site))+geom_line()+
   scale_shape_manual(values=c(1,19))+guides(col=FALSE)+
   scale_color_manual(values=c("grey","black"))+
   geom_vline(aes(xintercept=1999), linetype="dashed")+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  ggtitle("Similar magnitude analyte values")+ylab("Analyte ")+
+  ylab("Analyte ")+
   facet_wrap(~Variable, nrow=6, scales="free_y")
-
+dd
 ddd<-ggplotly(dd)
 ddd
 
