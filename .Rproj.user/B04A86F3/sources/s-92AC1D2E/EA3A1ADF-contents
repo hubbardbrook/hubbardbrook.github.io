@@ -305,6 +305,8 @@ d2<-ggplot(dsum, aes(x=waterYr, y=annCa ,group=Site))+geom_line()+geom_point(aes
   xlab("Year")+ylab("Ca2+ (ueq/L)")
 d2
 
+
+
 #########################
 
 
@@ -322,7 +324,7 @@ d<-gather(dsum, "vars","value",3:8)
 
 
 head(d)
-d[d$vars=="annCa","Variable"]<-"Mean annual NO3"
+d[d$vars=="annCa","Variable"]<-"Mean annual Ca"
 d[d$vars=="annSiO2","Variable"]<-"Mean annual SiO2"
 d[d$vars=="annpH","Variable"]<-"Mean annual pH"
 d[d$vars=="annANC","Variable"]<-"Mean annual ANC"
@@ -332,13 +334,15 @@ d[d$vars=="annDOC","Variable"]<-"Mean annual DOC"
 d[d$site=="W6","Site"]<-"W6 reference watershed"
 d[d$site=="W1","Site"]<-"W1 Calcium treatment"
 
+d$Variable<-factor(d$Variable, levels=c("Mean annual Ca","Mean annual SiO2","Mean annual pH","Mean annual ANC","Mean annual Al", "Mean annual DOC" ))
+
 # this shows all the data available for nitrate for the stream gauge in watershed 6
 dd<-ggplot(d, aes(x=waterYr, y=value ,group=Site, col=Site))+geom_point(aes(shape=Site))+geom_line()+
   scale_shape_manual(values=c(1,19))+guides(col=FALSE)+
   scale_color_manual(values=c("grey","black"))+
   geom_vline(aes(xintercept=1999), linetype="dashed")+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  ggtitle("Similar magnitude analyte values")+ylab("Analyte ( mg / L )")+
+  ggtitle("Similar magnitude analyte values")+ylab("Analyte ")+
   facet_wrap(~Variable, nrow=6, scales="free_y")
 
 ddd<-ggplotly(dd)
