@@ -80,7 +80,7 @@ plot1 <- ggplot(seeds, aes(x = YEAR, y = FAGRannm2mean)) +
   annotate("text", x = 2013, y = 56, label = "*", size=10) +
   annotate("text", x = 2017, y = 74, label = "*", size=10) +
   labs(x='Year', y="FAGR (seeds m2)")+
-  geom_text(aes(x=1993, y=75, label="B."),size=8, color="black") +
+  geom_text(aes(x=1993, y=70, label="B."),size=6, color="black") +
   theme_classic()+ylim(0,80)
 plot1
 
@@ -96,17 +96,10 @@ plot2 <- ggplot(seeds, aes(x = YEAR, y = ACSAannm2mean)) +
   annotate("text", x = 2006, y = 295, label = "*", size=10) +
   annotate("text", x = 2017, y = 185, label = "*", size=10) +
   annotate("text", x = 2019, y = 293, label = "*", size=10) +
-  geom_text(aes(x=1993, y=315, label="A."),size=8, color="black") +
+  geom_text(aes(x=1993, y=300, label="A."),size=6, color="black") +
   theme_classic()+ylim(0,325)
 plot2
 
-#Save plot 2 - annual mean of FRAM seeds
-plot3 <- ggplot(seeds, aes(x = YEAR, y = FRAMannm2mean)) + 
-  geom_bar(stat = "identity")+
-  geom_hline(yintercept = mean(dt1$FRAM.seed.m2, na.rm=TRUE), size=1)+
-  xlab("Year")+ylab("FRAM (seeds m2)")+
-  theme_classic()
-plot3
 
 ##############################################
 ##############################################
@@ -135,7 +128,7 @@ plot4 <- ggplot(seeds, aes(x=YEAR, y=FAGR_diff)) +
   geom_bar(stat="identity",  fill="gray", col="black") +
   geom_hline(yintercept = sd(seeds$FAGR_diff,  na.rm=TRUE), linetype="dashed")+
   labs(x = "Year", y = ("FAGR ASD"))+
-  geom_text(aes(x=1993, y=1.5, label="D."),size=8, color="black") +
+  geom_text(aes(x=1993, y=1.3, label="D."),size=6, color="black") +
   theme_classic()
 plot4
 
@@ -145,7 +138,7 @@ plot5 <- ggplot(seeds, aes(x=YEAR, y=ACSA_diff)) +
   geom_bar(stat="identity",fill="black") +
   geom_hline(yintercept = sd(seeds$ACSA_diff, na.rm=T), linetype="dashed")+
   labs(x = "Year", y = ("ACSA ASD"))+
-  geom_text(aes(x=1993, y=7, label="C."),size=8, color="black") +
+  geom_text(aes(x=1993, y=6.2, label="C."),size=6, color="black") +
   theme_classic()
 plot5
 
@@ -170,7 +163,7 @@ p5
 
 
 plotfinal<-subplot(p2, p1, p5, p4, nrows=4,  
-         shareX = FALSE, titleY=TRUE,margin=0.01)
+         shareX = TRUE, titleY=TRUE,margin=0.01)
 
 plotfinal
 # this line writes the html file to create interactive graphs for the online book
