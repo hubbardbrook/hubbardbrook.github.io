@@ -320,7 +320,7 @@ W
 
 
 # this line writes the html file to create interactive graphs for the online book
-htmlwidgets::saveWidget(as_widget(W), "Chapter6_fig2_water_balance_Campbell/WaterBalance_fig2.html")
+htmlwidgets::saveWidget(as_widget(W), "Hydrology/fig2_precip_stream_evapotranspiration.html")
 
 
 
