@@ -1,0 +1,189 @@
+---
+title: "Watershed_Ecosystem_Exercises"
+author: "Alex Young"
+date: '2022-06-29'
+output: html_document
+---
+
+```{r setup, warning=FALSE, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+```{r, warning=FALSE, message=FALSE}
+library(lubridate) # for handling date-times
+library(ggplot2) # for visualizing
+library(tidyr) # for data formatting
+library(dplyr) # for data formatting
+library(plotly)# for making interactive graphs
+```
+
+# Chapter 2 Hydrology
+
+
+```{r}
+
+## Chapter 2.1
+####################################################
+
+# read in streamflow data
+
+# Package ID: knb-lter-hbr.2.11 Cataloging System:https://pasta.edirepository.org.
+# Data set title: Hubbard Brook Experimental Forest: Daily Streamflow by Watershed, 1956 - present.
+inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/2/11/1254d17cbd381556c05afa740d380e78" 
+infile1 <- tempfile()
+try(download.file(inUrl1,infile1,method="curl"))
+if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
+
+dt1 <-read.csv(infile1,header=F 
+               ,skip=1
+               ,sep=","  
+               ,quot='"' 
+               , col.names=c(
+                 "DATE",     
+                 "WS",     
+                 "Streamflow",     
+                 "Flag"    ), check.names=TRUE)
+unlink(infile1)
+
+# view the dataset, 182,000 rows
+str(dt1)
+
+# Notice that WS is numeric, and we want the watersheds to be factors
+dt1$WS<-as.factor(dt1$WS)
+
+# Provide columns interpreted as a Date by R
+dt1$DATE<-ymd(dt1$DATE) # change how R interprets Date to be a date
+dt1$Year<-year(dt1$DATE)   #add a column for 'year' from date
+dt1$doy<-yday(dt1$DATE) # add day of year
+
+# add in water year
+w.year <- as.numeric(format(dt1$DATE, "%Y"))
+june.july.sept <- as.numeric(format(dt1$DATE, "%m")) < 6
+w.year[june.july.sept] <- w.year[june.july.sept] - 1
+
+dt1$wyear<-w.year
+
+# add in 'water year station'. 
+dt1$wys<-paste(dt1$wyear, dt1$WS)
+
+
+# make sure you are only using complete years for the record
+str.obs<-as.data.frame(table(dt1$WS, dt1$wyear))
+str.obs$wys<- paste(str.obs$Var2, str.obs$Var1)
+str.obs[str.obs$Freq<350, "Use"]<-"incomplete wyear" # complete is 350+ days
+str.obs[is.na(str.obs$Use),"Use"]<-"complete"
+#head(str.obs, 11)
+
+# bring complete years from str.obs to dt1
+dt1$Use<-str.obs$Use[match(dt1$wys, str.obs$wys)]
+dt1.complete<-dt1[dt1$Use=="complete",]
+
+
+# calculate the annual sum of streamflow measurements
+annstr<-aggregate(list(Streamflow=dt1.complete$Streamflow), 
+              by=list(WS=dt1.complete$WS, wyear=dt1.complete$wyear), FUN="sum")
+
+# this makes it nicer for working with other HB datasets
+annstr$WS<-sub("^","W",annstr$WS)
+
+#  Make a streamflow graph
+g1<-ggplot(annstr, aes(x=wyear, y=Streamflow, col=WS))+
+  geom_point()+geom_line()+
+  ylab("Steamflow (mm)")+xlab("Water year (June 1)")+
+  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+p1<-ggplotly(g1)
+
+p1 # is now a plotly object
+```
+
+```{r}
+
+## Chapter 2.2
+####################################################
+
+# read in preciptation data
+
+# Package ID: knb-lter-hbr.14.14 Cataloging System:https://pasta.edirepository.org.
+# Data set title: Hubbard Brook Experimental Forest: Total Daily Precipitation by Watershed, 1956 - present.
+inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/14/14/c606bfe2f2deb3fa3eabf692ae15f02d" 
+infile1 <- tempfile()
+try(download.file(inUrl1,infile1,method="curl"))
+if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
+
+dt2 <-read.csv(infile1,header=F 
+               ,skip=1
+               ,sep=","  
+               , col.names=c(
+                 "DATE",     
+                 "watershed",     
+                 "Precip"    ), check.names=TRUE)
+
+unlink(infile1)
+
+# conduct data formatting
+str(dt2)
+
+# We have a data column, but its not formatted as a date
+dt2$DATE<-ymd(dt2$DATE) # change how R interprets Date to be a date
+dt2$Year<-year(dt2$DATE)
+
+# add in water year
+w.year <- as.numeric(format(dt2$DATE, "%Y"))
+june.july.sept <- as.numeric(format(dt2$DATE, "%m")) < 6
+w.year[june.july.sept] <- w.year[june.july.sept] - 1
+
+dt2$wyear<-w.year # add water year as a column to precip dataset
+
+# add in water year-station
+dt2$wys<-paste(dt2$wyear, dt2$watershed)
+
+
+# make sure you are only using complete years for the record
+pre.obs<-as.data.frame(table(dt2$watershed , dt2$wyear))
+pre.obs$wys<- paste(pre.obs$Var2, pre.obs$Var1)
+pre.obs[pre.obs$Freq<350, "Use"]<-"incomplete wyear" # complete is 350+ days
+pre.obs[is.na(pre.obs$Use),"Use"]<-"complete"
+#head(pre.obs, 11)
+
+dt2$Use<-pre.obs$Use[match(dt2$wys, pre.obs$wys)]
+dt2.complete<-dt2[dt2$Use=="complete",]
+
+# get annual sums
+annpre<-aggregate(list(Precip=dt2.complete$Precip),
+      by=list(WS=dt2.complete$watershed, wyear=dt2.complete$wyear), FUN="sum")
+
+g2<-ggplot(annpre, aes(x=wyear, y=Precip, col=WS))+
+  geom_point()+geom_line()+
+  ylab("Precip (mm)")+xlab("Water year (June 1)")+
+  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+p2<-ggplotly(g2)
+p2
+```
+
+
+```{r}
+
+## Chapter 2.3
+####################################################
+
+# calculate Actual EvapoTranspiration (AET) #  Precip - Streamflow = AET
+
+### give the watersheds and years a unique ID. watershed-year, wsy
+annstr$wsy<-paste(annstr$WS, annstr$wyear)
+annpre$wsy<-paste(annpre$WS, annpre$wyear)
+
+# bring in precip data to streamflow object
+annstr$Precip<-annpre$Precip[match(annstr$wsy, annpre$wsy)]
+
+# calculate AET, assuming no change in storage
+annstr$AET<-annstr$Precip - annstr$Streamflow
+
+
+g3<-ggplot(annstr, aes(x=wyear, y=AET, col=WS))+
+  geom_point()+geom_line()+
+  ylab("AET (mm)")+xlab("Water year (June 1st)")+
+  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+p3<-ggplotly(g3)
+p3
+```

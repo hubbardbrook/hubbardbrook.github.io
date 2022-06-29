@@ -947,28 +947,35 @@ ggplot(trg, aes(x=Plot, y=value, fill=Sp))+geom_bar(stat="identity", position="s
 ####  The planimetric area is 13.2 ha
 sum(trg$value) # this is the biomass of the entire region?
 
-w6biomass<-sum(trg$value) / 13.2
-w6biomass # kg of biomass per hectare
+w6biomass.kg.ha<-sum(trg$value) / 13.2
+w6biomass.kg.ha # kg of biomass per hectare
+
+w6biomass.g.m2<- w6biomass.kg.ha * 1000 / 10000
+w6biomass.g.m2
+
+# averaged 16,107 grams/m2 in 65
+# is 22495 grams/m2 in 97
+# biomass increased
+
 
 # for every gram of tree, there is 3.13 mg of Ca,  based on dry weight.
-##   unit conversions 3.13 mg / g * 1000 g / kg * w6biomass kg / ha.   End is mg of Ca per hectare
 
-w6ca.mg.ha<-3.13*1000 * w6biomass 
+w6ca.g.m2<-w6biomass.g.m2 * 0.00313 # grams Ca per gram of wood
+w6ca.g.m2
 
-w6ca.kg.ha <-w6ca.mg.ha / 1000000 # mg in a kg
 
-w6ca.kg.ha   # ~700 kg/ha Ca
+
 
 ## Chapter 5.2
 ####################################################
 
 # how does this value of Ca in the vegetation from 1965 differ from 1997?
 
-########## no data yet from Mary for 1965, only 1997
+# averaged 50.7 grams of Ca /m2 in 1965.
+# is 70.4 g Ca /m2 in 97.
 
-# read in tree biomass information for 1997
- 
- 
+(70.4-50.7 ) / 50.7 # 39% increase?
+
 
 
 # Chapter 6 Net soil release                    ##########
