@@ -67,13 +67,33 @@ june.july.sept <- as.numeric(format(dt1$DATE, "%m")) < 6
 w.year[june.july.sept] <- w.year[june.july.sept] - 1
 
 dt1$wyear<-w.year
+
+# add in 'water year station'. 
+dt1$wys<-paste(dt1$wyear, dt1$WS)
+
 head(dt1)
 
+# make sure you are only using complete years for the record
+str.obs<-as.data.frame(table(dt1$WS, dt1$wyear))
+str.obs$wys<- paste(str.obs$Var2, str.obs$Var1)
+str.obs[str.obs$Freq<350, "Use"]<-"incomplete wyear" # complete is 350 or more days
+str.obs[is.na(str.obs$Use),"Use"]<-"complete"
+head(str.obs, 50)
+
+
+dt1$Use<-str.obs$Use[match(dt1$wys, str.obs$wys)]
+
+dt1.complete<-dt1[dt1$Use=="complete",]
+
+dt1.complete
 # calculate the annual sum of streamflow measurements
-annstr<-aggregate(list(Streamflow=dt1$Streamflow), by=list(WS=dt1$WS, wyear=dt1$wyear), FUN="sum")
+annstr<-aggregate(list(Streamflow=dt1.complete$Streamflow), by=list(WS=dt1.complete$WS, wyear=dt1.complete$wyear), FUN="sum")
 
 # this makes it nicer for working with other HB datasets
 annstr$WS<-sub("^","W",annstr$WS)
+head(annstr)
+
+
 
 
 #  Data currently go to 22
@@ -120,10 +140,27 @@ june.july.sept <- as.numeric(format(dt2$DATE, "%m")) < 6
 w.year[june.july.sept] <- w.year[june.july.sept] - 1
 
 dt2$wyear<-w.year # add water year as a column to precip dataset
+
+# add in water year-station
+dt2$wys<-paste(dt2$wyear, dt2$watershed)
 head(dt2)
 
+
+# make sure you are only using complete years for the record
+pre.obs<-as.data.frame(table(dt2$watershed , dt2$wyear))
+pre.obs$wys<- paste(pre.obs$Var2, pre.obs$Var1)
+pre.obs[pre.obs$Freq<350, "Use"]<-"incomplete wyear" # complete is 350 or more days
+pre.obs[is.na(pre.obs$Use),"Use"]<-"complete"
+head(pre.obs, 50)
+
+
+dt2$Use<-pre.obs$Use[match(dt2$wys, pre.obs$wys)]
+
+dt2.complete<-dt2[dt2$Use=="complete",]
+
+
 # get annual sums
-annpre<-aggregate(list(Precip=dt2$Precip), by=list(WS=dt2$watershed, wyear=dt2$wyear), FUN="sum")
+annpre<-aggregate(list(Precip=dt2.complete$Precip), by=list(WS=dt2.complete$watershed, wyear=dt2.complete$wyear), FUN="sum")
 head(annpre) 
 
 g2<-ggplot(annpre, aes(x=wyear, y=Precip, col=WS))+
@@ -156,7 +193,7 @@ g3<-ggplot(annstr, aes(x=wyear, y=AET, col=WS))+
 g3
 
 
-library(plotly)
+## create gg plotly objects  
 p1<-ggplotly(g1)
 p2<-ggplotly(g2)
 p3<-ggplotly(g3)
@@ -208,13 +245,31 @@ june.july.sept <- as.numeric(format(dt3$DATE, "%m")) < 6
 w.year[june.july.sept] <- w.year[june.july.sept] - 1
 
 dt3$wyear<-w.year # add water year as a column to precip dataset
-
 dt3$month<-month(dt3$date)
+
+# add in water year-station
+dt3$wys<-paste(dt3$wyear, dt3$STA)
+head(dt3)
+
+
+# make sure you are only using complete years for the record
+pre.obs<-as.data.frame(table(dt3$STA , dt3$wyear))
+pre.obs$wys<- paste(pre.obs$Var2, pre.obs$Var1)
+pre.obs[pre.obs$Freq<350, "Use"]<-"incomplete wyear" # complete is 350 or more days
+pre.obs[is.na(pre.obs$Use),"Use"]<-"complete"
+head(pre.obs, 50)
+
+
+dt3$Use<-pre.obs$Use[match(dt3$wys, pre.obs$wys)]
+
+dt3.complete<-dt3[dt3$Use=="complete",]
+
+
 head(dt3)
 
 # get annual averages of air
 
-growseas<-dt3[dt3$month >="6" & dt3$month <=9 ,]
+growseas<-dt3.complete[dt3.complete$month >="6" & dt3.complete$month <=9 ,]
 annairgrow<-aggregate(list(avtemp=growseas$AVE), by=list( wyear=growseas$wyear), FUN="mean")
 head(annairgrow) 
 
@@ -264,7 +319,7 @@ head(annstr)
 WS5<-annstr[annstr$WS=="W5",]  
   head(WS5)
 # subset years for periof of time in question
-harvest<-WS5[WS5$wyear >= "1965" & WS5$wyear <="2020" ,]
+harvest<-WS5[WS5$wyear >= "1970" & WS5$wyear <="1994" ,]
 head(harvest)
 
 # Use precip and stream discharge to evaluate effect on water yield and AET for 1983 (pre) - 1986 (post clear cut)
@@ -274,7 +329,7 @@ harvest$wyear<-as.integer(harvest$wyear)
 gharv<-ggplot(harvest, aes(x=wyear, y=AET))+geom_point()+
   geom_vline(xintercept=1983, linetype="dashed", col="red")+
   geom_vline(xintercept=1985, linetype="solid", col="red")+
-  geom_line()+scale_x_continuous(limits = c(1965, 2020), breaks = seq(1965, 2020, 5))+
+  geom_line()+scale_x_continuous(limits = c(1970, 1994), breaks = seq(1970, 1994, 5))+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   xlab("Water year (June 1)")+
   ylab("Actual Evapotranspiration")+
@@ -296,7 +351,7 @@ htmlwidgets::saveWidget(as_widget(pharv), "hwChapter/hydrology_2_WS5_harvest.htm
 
 
 ####################################################     ##
-  # Chapter 3 Streamwater nutrient fluxes         ##########
+  # Chapter 3 Stream water nutrient fluxes        ##########
 ####################################################     ##
 
 
@@ -459,13 +514,26 @@ w.year <- as.numeric(format(dt4$DATE, "%Y"))
 june.july.sept <- as.numeric(format(dt4$DATE, "%m")) < 6
 w.year[june.july.sept] <- w.year[june.july.sept] - 1
 dt4$wyear<-w.year
+head(dt4)
+
+# make sure you are only using complete years for the record
+monchem<-as.data.frame(table( dt4$wyear))
+
+monchem$wys<- paste(monchem$Var1)
+monchem[monchem$Freq<12, "Use"]<-"incomplete wyear" # incomplete is less then 12 months
+monchem[is.na(monchem$Use),"Use"]<-"complete"
+head(monchem, 50)
+
+dt4$Use<-monchem$Use[match(dt4$wyear, monchem$wys)]
+
+dt4.complete<-dt4[dt4$Use=="complete",]
 
 
 # Sum the 12 months to get annual totals
 ## Ca is in g/ha
 
-annCaWS6<-aggregate(list(Ca.g.ha=dt4$Ca_flux), by=list(wyear=dt4$wyear), FUN="sum")
-head(annCa)
+annCaWS6<-aggregate(list(Ca.g.ha=dt4.complete$Ca_flux), by=list(wyear=dt4.complete$wyear), FUN="sum")
+head(annCaWS6)
 
 # has Ca flux from WS6 changed since the 1960s?
 gca1<-ggplot(annCaWS6, aes(x=wyear, y=Ca.g.ha))+geom_point()+geom_line()+
@@ -649,12 +717,23 @@ june.july.sept <- as.numeric(format(dt5$DATE, "%m")) < 6
 w.year[june.july.sept] <- w.year[june.july.sept] - 1
 dt5$wyear<-w.year
 
+# make sure you are only using complete years for the record
+monchem<-as.data.frame(table( dt5$wyear))
+
+monchem$wys<- paste(monchem$Var1)
+monchem[monchem$Freq<12, "Use"]<-"incomplete wyear" # incomplete is less then 12 months
+monchem[is.na(monchem$Use),"Use"]<-"complete"
+head(monchem, 50)
+
+dt5$Use<-monchem$Use[match(dt5$wyear, monchem$wys)]
+
+dt5.complete<-dt5[dt5$Use=="complete",]
 
 # Sum the 12 months to get annual totals
 ## Ca is in g/ha
 
-annCaws2<-aggregate(list(Ca.g.ha=dt5$Ca_flux), by=list(wyear=dt5$wyear), FUN="sum")
-head(annCa)
+annCaws2<-aggregate(list(Ca.g.ha=dt5.complete$Ca_flux), by=list(wyear=dt5.complete$wyear), FUN="sum")
+head(annCaws2)
 
 
 # Combine WS6 and WS2
@@ -802,14 +881,26 @@ w.year[june.july.sept] <- w.year[june.july.sept] - 1
 dt6$wyear<-w.year
 
 
+# make sure you are only using complete years for the record
+monchem<-as.data.frame(table( dt6$wyear))
+
+monchem$wys<- paste(monchem$Var1)
+monchem[monchem$Freq<12, "Use"]<-"incomplete wyear" # incomplete is less then 12 months
+monchem[is.na(monchem$Use),"Use"]<-"complete"
+head(monchem, 50)
+
+dt6$Use<-monchem$Use[match(dt6$wyear, monchem$wys)]
+
+dt6.complete<-dt6[dt6$Use=="complete",]
+
 # calculate annual input of Ca into WS6
-head(dt6)
+head(dt6.complete)
 
 
 # Sum the 12 months to get annual totals
 ## Ca is in milligramPerLiter
 
-annCa_bulk<-aggregate(list(Ca.mg.L=dt6$Ca), by=list(wyear=dt6$wyear), FUN="sum")
+annCa_bulk<-aggregate(list(Ca.mg.L=dt6.complete$Ca), by=list(wyear=dt6.complete$wyear), FUN="sum")
 
 ginputca1<-ggplot(annCa_bulk, aes(x=wyear, y=Ca.mg.L))+geom_point()+geom_line()+
   ggtitle("Rain gauge 22? : annual input of Ca ")+
@@ -831,126 +922,53 @@ htmlwidgets::saveWidget(as_widget(pinputca1), "hwChapter/bulk_precip_4_Ca.html")
 ## Chapter 5.1
 ####################################################
 
-# read in vegetation data for 
+# read in vegetation data for WS6 (received from Mary Martin 2022-06-29 by email)
 
 
-# Package ID: knb-lter-hbr.29.6 Cataloging System:https://pasta.edirepository.org.
-# Data set title: Forest Inventory of a Northern Hardwood Forest:     Watershed 6 1965, Hubbard Brook Experimental Forest.
-inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/29/6/b1958bf84b99a05dc591b5cefe6bff78" 
-infile1 <- tempfile()
-try(download.file(inUrl1,infile1,method="curl"))
-if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
-
-
-dt7 <-read.csv(infile1,header=F 
-               ,skip=1
-               ,sep="," 
-               , col.names=c(
-                 "Plot",     
-                 "Zone",     
-                 "Species",     
-                 "SppNum",     
-                 "Seq",     
-                 "Tag",     
-                 "Dbh",     
-                 "Vigor",     
-                 "AbvBmss",     
-                 "BlwBmss",     
-                 "TwotoTen",     
-                 "v_10Area",     
-                 "TwotoTenArea"    ), check.names=TRUE)
-
-unlink(infile1)
-
-# Fix any interval or ratio columns mistakenly read in as nominal and nominal columns read as numeric or dates read as strings
-
-if (class(dt7$Plot)!="factor") dt7$Plot<- as.factor(dt7$Plot)
-if (class(dt7$Zone)!="factor") dt7$Zone<- as.factor(dt7$Zone)
-if (class(dt7$Species)!="factor") dt7$Species<- as.factor(dt7$Species)
-if (class(dt7$SppNum)!="factor") dt7$SppNum<- as.factor(dt7$SppNum)
-if (class(dt7$Seq)!="factor") dt7$Seq<- as.factor(dt7$Seq)
-if (class(dt7$Tag)!="factor") dt7$Tag<- as.factor(dt7$Tag)
-if (class(dt7$Dbh)=="factor") dt7$Dbh <-as.numeric(levels(dt7$Dbh))[as.integer(dt7$Dbh) ]               
-if (class(dt7$Dbh)=="character") dt7$Dbh <-as.numeric(dt7$Dbh)
-if (class(dt7$Vigor)!="factor") dt7$Vigor<- as.factor(dt7$Vigor)
-if (class(dt7$AbvBmss)=="factor") dt7$AbvBmss <-as.numeric(levels(dt7$AbvBmss))[as.integer(dt7$AbvBmss) ]               
-if (class(dt7$AbvBmss)=="character") dt7$AbvBmss <-as.numeric(dt7$AbvBmss)
-if (class(dt7$BlwBmss)=="factor") dt7$BlwBmss <-as.numeric(levels(dt7$BlwBmss))[as.integer(dt7$BlwBmss) ]               
-if (class(dt7$BlwBmss)=="character") dt7$BlwBmss <-as.numeric(dt7$BlwBmss)
-if (class(dt7$TwotoTen)!="factor") dt7$TwotoTen<- as.factor(dt7$TwotoTen)
-if (class(dt7$v_10Area)=="factor") dt7$v_10Area <-as.numeric(levels(dt7$v_10Area))[as.integer(dt7$v_10Area) ]               
-if (class(dt7$v_10Area)=="character") dt7$v_10Area <-as.numeric(dt7$v_10Area)
-if (class(dt7$TwotoTenArea)=="factor") dt7$TwotoTenArea <-as.numeric(levels(dt7$TwotoTenArea))[as.integer(dt7$TwotoTenArea) ]               
-if (class(dt7$TwotoTenArea)=="character") dt7$TwotoTenArea <-as.numeric(dt7$TwotoTenArea)
-
-# Convert Missing Values to NA for non-dates
-
-dt7$Tag <- as.factor(ifelse((trimws(as.character(dt7$Tag))==trimws("0")),NA,as.character(dt7$Tag)))
-dt7$v_10Area <- ifelse((trimws(as.character(dt7$v_10Area))==trimws("0")),NA,dt7$v_10Area)               
-suppressWarnings(dt7$v_10Area <- ifelse(!is.na(as.numeric("0")) & (trimws(as.character(dt7$v_10Area))==as.character(as.numeric("0"))),NA,dt7$v_10Area))
-dt7$TwotoTenArea <- ifelse((trimws(as.character(dt7$TwotoTenArea))==trimws("0")),NA,dt7$TwotoTenArea)               
-suppressWarnings(dt7$TwotoTenArea <- ifelse(!is.na(as.numeric("0")) & (trimws(as.character(dt7$TwotoTenArea))==as.character(as.numeric("0"))),NA,dt7$TwotoTenArea))
+dt7<-read.csv("C:\\Users\\bears\\Downloads\\HubbardBrookWS6_Tree_Biomass_1997.csv")
 
 
 # Here is the structure of the input data frame:
 str(dt7)       
 
-# vigor code.
-## 1, diseased (bbd)
-## 2, bbs in crown decline
-## 3, sick (trees with crown decline)
-## 4, standing dead tree
-## 5, standing dead snag (no limbs)
 
-# AbvBmss, in kg.  BlwBmss, in kg
-
-# convert biomass in kg to kg/ha by incorporating the plot area
-head(dt7)
-dt7$abv_10_kgha<- dt7$AbvBmss / dt7$v_10Area * 10000
-dt7$blw_10_kgha<- dt7$AbvBmss / dt7$TwotoTenArea * 10000
-dt7$Species
-
-
-tr<-aggregate( list(abv=dt7$AbvBmss , blw=dt7$BlwBmss), by=list(Plot=dt7$Plot, Zone=dt7$Zone), FUN="sum", na.rm=T)
+tr<-aggregate( list(abv=dt7$ABOVE.kg , blw=dt7$BELOW.kg), by=list(Plot=dt7$Plot, Sp=dt7$SppName), FUN="sum", na.rm=T)
 dim(tr)
 head(tr)
 
+# gather above and below to make graphing easier
 trg<-gather(tr, "abe","value", 3:4)
+head(trg)
 
-tzones<-as.data.frame(table( tr$Zone))
-
-trg$num<-tzones$Freq[match(trg$Zone, tzones$Var1)]
-
-trg$perplot<-trg$value/trg$num
-
-#tzones
-## 1  spruce/fir 26 plots
-## 2  high hardwoods
-## 3 slightly lower hardwoods, combing with 2.
-## 4 mid elevation hardwoods
-## 5  lower elevation hardwoods
-
-ggplot(trg, aes(x=Zone, y=value, fill=abe))+geom_bar(stat="identity", position="stack", col="black")
-ggplot(trg, aes(x=Zone, y=perplot, fill=abe))+geom_bar(stat="identity", position="stack", col="black")
-
+ggplot(trg, aes(x=Plot, y=value, fill=Sp))+geom_bar(stat="identity", position="stack", col="black")
 
 ## calculate the per area value of biomass on WS6 in 1974.
 
 ####  The planimetric area is 13.2 ha
+sum(trg$value) # this is the biomass of the entire region?
 
-
+w6biomass<-sum(trg$value) / 13.2
+w6biomass # kg of biomass per hectare
 
 # for every gram of tree, there is 3.13 mg of Ca,  based on dry weight.
+##   unit conversions 3.13 mg / g * 1000 g / kg * w6biomass kg / ha.   End is mg of Ca per hectare
 
+w6ca.mg.ha<-3.13*1000 * w6biomass 
+
+w6ca.kg.ha <-w6ca.mg.ha / 1000000 # mg in a kg
+
+w6ca.kg.ha   # ~700 kg/ha Ca
 
 ## Chapter 5.2
 ####################################################
 
 # how does this value of Ca in the vegetation from 1965 differ from 1997?
 
+########## no data yet from Mary for 1965, only 1997
+
 # read in tree biomass information for 1997
-
-
+ 
+ 
 
 
 # Chapter 6 Net soil release                    ##########

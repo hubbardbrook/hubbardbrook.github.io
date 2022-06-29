@@ -3,7 +3,7 @@
     "path": "~/GitHub/hubbardbrook.github.io/hwChapter/hw_chapter_EDI.R",
     "project_path": "hwChapter/hw_chapter_EDI.R",
     "type": "r_source",
-    "hash": "1504475538",
+    "hash": "4110406648",
     "contents": "",
     "dirty": false,
     "created": 1656365959059.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "1003,0",
-        "scrollLine": "977"
+        "cursorPosition": "1021,0",
+        "scrollLine": "946"
     },
     "folds": "",
-    "lastKnownWriteTime": 1656383381,
+    "lastKnownWriteTime": 1656522568,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1656383381055,
+    "last_content_update": 1656522568444,
     "read_only": false,
     "read_only_alternatives": []
 }
