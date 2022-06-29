@@ -187,3 +187,123 @@ g3<-ggplot(annstr, aes(x=wyear, y=AET, col=WS))+
 p3<-ggplotly(g3)
 p3
 ```
+
+
+```{r}
+
+## Chapter 2.4
+####################################################
+
+# # read in air temperature data,  compare AET with Average annual air temp
+
+# Package ID: knb-lter-hbr.59.10 Cataloging System:https://pasta.edirepository.org.
+# Data set title: Hubbard Brook Experimental Forest: Daily Temperature Record, 1955 - present.
+inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/59/10/9723086870f14b48409869f6c06d6aa8" 
+infile1 <- tempfile()
+try(download.file(inUrl1,infile1,method="curl"))
+if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
+
+
+dt3 <-read.csv(infile1,header=F 
+               ,skip=1
+               ,sep=","  
+               , col.names=c(
+                 "date",     
+                 "STA",     
+                 "MAX",     
+                 "MIN",     
+                 "AVE",     
+                 "Flag"    ), check.names=TRUE)
+
+unlink(infile1)
+
+# We have a data column, but its not formatted as a date
+dt3$DATE<-ymd(dt3$date) # change how R interprets Date to be a date
+dt3$Year<-year(dt3$DATE)
+
+# add in water year
+w.year <- as.numeric(format(dt3$DATE, "%Y"))
+june.july.sept <- as.numeric(format(dt3$DATE, "%m")) < 6
+w.year[june.july.sept] <- w.year[june.july.sept] - 1
+
+dt3$wyear<-w.year # add water year as a column to precip dataset
+dt3$month<-month(dt3$date)
+
+# add in water year-station
+dt3$wys<-paste(dt3$wyear, dt3$STA)
+
+
+# make sure you are only using complete years for the record
+pre.obs<-as.data.frame(table(dt3$STA , dt3$wyear))
+pre.obs$wys<- paste(pre.obs$Var2, pre.obs$Var1)
+pre.obs[pre.obs$Freq<350, "Use"]<-"incomplete wyear" # complete is 350 or more days
+pre.obs[is.na(pre.obs$Use),"Use"]<-"complete"
+
+
+dt3$Use<-pre.obs$Use[match(dt3$wys, pre.obs$wys)]
+
+dt3.complete<-dt3[dt3$Use=="complete",]
+
+# get annual averages of air
+growseas<-dt3.complete[dt3.complete$month >="6" & dt3.complete$month <=9 ,]
+annairgrow<-aggregate(list(avtemp=growseas$AVE), by=list( wyear=growseas$wyear), FUN="mean")
+
+
+#visualize to become familiar with data
+ggplot(annairgrow, aes(x=wyear, y=avtemp))+
+  geom_point()+geom_line()+
+  ylab("Growing season air temperature (C)")+xlab("Water year (June 1st)")+
+  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+
+# view trend from 1995-2010 of growing season temp and AET
+
+### bring in av temp to annstr
+annstr$avtemp<-annairgrow$avtemp[match(annstr$wyear, annairgrow$wyear)]
+
+#subset to 1995-2010
+temp_aet<-annstr[annstr$wyear >= "1995" & annstr$wyear <="2010" ,]
+
+
+ch2<-ggplot(temp_aet, aes(x=avtemp, y=AET, col=WS))+geom_point()+
+  geom_smooth(method="lm", se=F)+
+  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Average growing season temperature (C) June 1 - Sep 30")+
+  ylab("Actual Evapotranspiration")
+
+
+pch2<-ggplotly(ch2)
+pch2
+```
+## We can interpret the observed positive relationship between AET and growing season temperature to suggest that the vegetation is using more water in a warming climate.
+
+```{r}
+## Chapter 2.5
+####################################################
+
+# Forest cutting to increase water supply?
+# WS5 clearcut in whole tree harvest 1984-1985.
+
+# separate out WS5
+WS5<-annstr[annstr$WS=="W5",]  
+
+# subset years for periof of time in question
+harvest<-WS5[WS5$wyear >= "1970" & WS5$wyear <="1994" ,]
+
+# Use precip and stream discharge to evaluate effect on water yield and AET for 1983 (pre) - 1986 (post clear cut)
+harvest$wyear<-as.integer(harvest$wyear)
+
+gharv<-ggplot(harvest, aes(x=wyear, y=AET))+geom_point(col="forest green")+
+  geom_vline(xintercept=1983, linetype="dashed", col="red")+
+  geom_vline(xintercept=1985, linetype="solid", col="red")+
+  geom_line(col="forest green")+scale_x_continuous(limits = c(1970, 1994), breaks = seq(1970, 1994, 5))+
+  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Water year (June 1)")+
+  ylab("Actual Evapotranspiration (mm)")+
+  ggtitle("Hubbard Brook Watershed 5: Whole tree harvest 1983-1985")
+pharv<-ggplotly(gharv)
+pharv
+
+```
+
+## Results from the WS5 experiment suggest that any increased water supply for human uses that may happen with forest cutting is temporary, that 3 years after harvest the vegetation uses the same amount of water.

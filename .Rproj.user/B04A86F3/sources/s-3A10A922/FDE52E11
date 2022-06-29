@@ -1,0 +1,26 @@
+{
+    "id": "FDE52E11",
+    "path": "~/GitHub/hubbardbrook.github.io/climateChange/fig3_snowpack_v0.6.R",
+    "project_path": "climateChange/fig3_snowpack_v0.6.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1655351765728.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "273,9",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1655351020,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1655351020,
+    "read_only": false,
+    "read_only_alternatives": []
+}
