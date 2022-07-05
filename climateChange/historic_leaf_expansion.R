@@ -66,6 +66,13 @@ head(expand,20)
 
 # huh, DAY is not DOY, its day of water year
 
+# add in water year
+w.year <- as.numeric(format(expand$DATE, "%Y"))
+june.july.sept <- as.numeric(format(expand$DATE, "%m")) < 6
+w.year[june.july.sept] <- w.year[june.july.sept] - 1
+expand$wyear<-w.year # add water year as a column to precip dataset
+
+head(expand,50)
 
 expav<-aggregate(list(DAY=expand$DAY), by=list(SEASON=expand$SEASON, Year=expand$Year, SPECIES=expand$SPECIES), FUN="mean", na.rm=T)
 

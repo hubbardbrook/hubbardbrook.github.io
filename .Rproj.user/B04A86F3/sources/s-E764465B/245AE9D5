@@ -1,0 +1,27 @@
+{
+    "id": "245AE9D5",
+    "path": "~/GitHub/hubbardbrook.github.io/climateChange/historic_soil_microbial_C_measurements.R",
+    "project_path": "climateChange/historic_soil_microbial_C_measurements.R",
+    "type": "r_source",
+    "hash": "1566848406",
+    "contents": "",
+    "dirty": false,
+    "created": 1657040036631.0,
+    "source_on_save": false,
+    "relative_order": 6,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "176,0",
+        "scrollLine": "150"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1657041963,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1657041963478,
+    "read_only": false,
+    "read_only_alternatives": []
+}
