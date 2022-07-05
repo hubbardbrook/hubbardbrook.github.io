@@ -1,213 +1,6 @@
-microC<-ggplot(cbio, aes(x=Year, y=BIOC, col=Hor,group=Plot))+
-geom_jitter()+facet_wrap(~ Elevation, scales="free_y")+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-ylab("Microbial Biomass C (mg/kg)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of microbial biomass C")
-microC
-picroC<-ggplotly(microC)
-micro
-microC<-ggplot(cbio, aes(x=Year, y=value, col=Horizons,group=Plot))+
-geom_jitter()+facet_grid(Hor ~ Elevation, scales="free_y")+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-ylab("Microbial Biomass C (mg/kg)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of microbial biomass C")
-micro
-## now Nmin
-microN<-ggplot(dt1, aes(x=Year, y=MIN, col=doy,group=Plot))+
-geom_point()+facet_grid(Hor ~ Elevation, scales="free_y")+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-picroN<-ggplotly(microN)
-picroN
-nminav<-aggregate(list(Nmin=dt1$MIN), by=list(Year=dt1$Year, Hor=dt1$Hor, Elevation=dt1$Elevation), FUN="mean", na.rm=T)
-## now Nmin
-microN<-ggplot(dt1, aes(x=Year, y=MIN, col=doy,group=Plot))+
-geom_line(data=nminav, aes(x=Year, y=Nmin))+
-geom_point()+facet_grid(Hor ~ Elevation, scales="free_y")+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-picroN<-ggplotly(microN)
-picroN
-## now Nmin
-microN<-ggplot(dt1, aes(x=Year, y=MIN, col=doy,group=Plot))+
-geom_line(data=nminav, aes(x=Year, y=Nmin))+
-geom_point()+facet_grid(Hor ~ Elevation, scales="free_y")+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-microN
-head(dt1)
-head(nminav)
-microN<-ggplot(nminav, aes(x=Year, y=Nmin))+
-geom_point()+facet_grid(Hor ~ Elevation, scales="free_y")+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-microN
-microN<-ggplot(nminav, aes(x=Year, y=Nmin, col=Hor))+
-geom_point()+facet_wrap( ~ Elevation, scales="free_y")+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-microN
-####  Average to the year level
-nminav<-aggregate(list(Nmin=dt1$MIN), by=list(Year=dt1$Year, Hor=dt1$Hor), FUN="mean", na.rm=T)
-head(nminav)
-microN<-ggplot(nminav, aes(x=Year, y=Nmin, col=Hor))+
-geom_point()+geom_line()+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-microN
-microN<-ggplot(nminav, aes(x=Year, y=Nmin, col=Hor))+
-geom_point()+geom_line()+
-geom_point(dt1, aes(x=Year, y=MIN, col=doy,group=Plot) )+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-microN
-microN<-ggplot(nminav, aes(x=Year, y=Nmin, col=Hor))+
-geom_point()+geom_line()+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-microN
-htmlwidgets::saveWidget(as_widget(picroC), "climateChange/N_mineralization.html")
-microN
-picroN<-ggplotly(microN)
-picroN
-## now Nmin
-microN<-ggplot(dt1, aes(x=Year, y=MIN, col=doy,group=Plot))+
-geom_point()+facet_grid(Hor ~ Elevation, scales="free_y")+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-microN
-# now factor in the right order
-dt1$Elevation<-factor(dt1$Elevation, levels=c("Low","Mid","High","Spruce Fir","Upper"))
-dt1$Hor<-factor(dt1$Hor, levels=c("Oi/Oe","Oa/A", "Min"))
-table(dt1$Hor)
-microC<-ggplot(dt1, aes(x=Year, y=BIOC, col=doy,group=Plot))+
-geom_jitter()+facet_grid(Hor ~ Elevation, scales="free_y")+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-ylab("Microbial Biomass C (mg/kg)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of microbial biomass C")
-picroC<-ggplotly(microC)
-picroC
-microN<-ggplot(nminav, aes(x=Year, y=Nmin, col=Hor))+
-geom_point()+geom_line()+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-microN
-microN<-ggplot(nminav, aes(x=Year, y=Nmin, col=Hor))+
-geom_point()+geom_line()+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-scale_color_manual(values=c("blue","orange","grey"))
-microN<-ggplot(nminav, aes(x=Year, y=Nmin, col=Hor))+
-geom_point()+geom_line()+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-scale_color_manual(values=c("blue","orange","grey"))+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-microN
-microN<-ggplot(nminav, aes(x=Year, y=Nmin, col=Hor))+
-geom_point()+geom_line()+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-scale_color_manual(values=c("light blue","orange","grey"))+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-microN
-microN<-ggplot(nminav, aes(x=Year, y=Nmin, col=Hor))+
-geom_point()+geom_line()+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-scale_color_manual(values=c("teal blue","orange","grey"))+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-microN
-microN<-ggplot(nminav, aes(x=Year, y=Nmin, col=Hor))+
-geom_point()+geom_line()+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-scale_color_manual(values=c("blue green","orange","grey"))+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-microN
-microN<-ggplot(nminav, aes(x=Year, y=Nmin, col=Hor))+
-geom_point()+geom_line()+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-scale_color_manual(values=c("blue-green","orange","grey"))+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-microN
-microN<-ggplot(nminav, aes(x=Year, y=Nmin, col=Hor))+
-geom_point()+geom_line()+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-scale_color_manual(values=c("ocean blue","orange","grey"))+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-microN
-microN<-ggplot(nminav, aes(x=Year, y=Nmin, col=Hor))+
-geom_point()+geom_line()+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-scale_color_manual(values=c("deepskyblue2","orange","grey"))+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-microN
-htmlwidgets::saveWidget(as_widget(picroC), "climateChange/N_mineralization.html")
-microN<-ggplot(nminav, aes(x=Year, y=Nmin, col=Hor))+
-geom_point()+geom_line()+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-scale_color_manual(values=c("deepskyblue2","orange","grey"))+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("N mineralization")
-microN
-htmlwidgets::saveWidget(as_widget(picroC), "climateChange/N_mineralization.html")
-microN<-ggplot(nminav, aes(x=Year, y=Nmin, col=Hor))+
-geom_point()+geom_line()+
-theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-labs(col='Day of year')+
-scale_color_manual(values=c("deepskyblue2","orange","grey"))+
-ylab("N mineralization (mg/kg/day)")+
-ggtitle("Microbial biomass N in the Oie, Oa, and mineral soil horizons in the Bear Brook watershed (west of the reference watershed 6)")
-microN
-htmlwidgets::saveWidget(as_widget(picroC), "climateChange/N_mineralization.html")
-htmlwidgets::saveWidget(as_widget(picroN), "climateChange/N_mineralization.html")
-# make sure you are only using complete years for the record
-pre.obs<-as.data.frame(table(dt3$STA , dt3$wyear))
-pre.obs$wys<- paste(pre.obs$Var2, pre.obs$Var1)
-pre.obs[pre.obs$Freq<350, "Use"]<-"incomplete wyear" # complete is 350 or more days
-pre.obs[is.na(pre.obs$Use),"Use"]<-"complete"
-head(pre.obs, 50)
-# make sure you are only using complete years for the record
-pre.obs<-as.data.frame(table(dt3$STA , dt3$wyear))
-pre.obs$wys<- paste(pre.obs$Var2, pre.obs$Var1)
-pre.obs
 # Precipitation trends for Fahey on-line book
 # Young June 13 2022
+
 ## With a majority of the code
 #Install packages
 #install.packages("VFS")
@@ -216,6 +9,7 @@ pre.obs
 #install.packages("trend")
 #install.packages("zoo")
 #install.packages("ggpmisc")
+
 #Use the libraries
 library("VFS")
 library("plyr")
@@ -223,36 +17,42 @@ library("ggplot2")
 library("trend")
 library(readr)
 library(plotly)
+
 #Read GHCN data for Hanover
-hanover_GHCN <- read.dly("ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/all/USC00273850.dly")
-bethlehem1_GHCN <- read.dly("ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/all/USC00270703.dly")
-bethlehem2_GHCN <- read.dly("ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/all/USC00270706.dly")
-bethlehem3_GHCN <- read.dly("ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/all/USC00270707.dly")
-stjohnsbury_GHCN <- read.dly("ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/all/USC00437054.dly")
+ hanover_GHCN <- read.dly("ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/all/USC00273850.dly")
+ bethlehem1_GHCN <- read.dly("ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/all/USC00270703.dly") 
+ bethlehem2_GHCN <- read.dly("ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/all/USC00270706.dly") 
+ bethlehem3_GHCN <- read.dly("ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/all/USC00270707.dly")
+ stjohnsbury_GHCN <- read.dly("ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/all/USC00437054.dly")
+
+ 
+ 
 # could also use:
 # hanover_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00273850.dly")
 # bethlehem1_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00270703.dly")
 # bethlehem2_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00270706.dly")
 # bethlehem3_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00270707.dly")
 # stjohnsbury_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00437054.dly")
-#
+# 
 # write.csv(hanover_GHCN, file = "GHCN/hanover_GHCN.csv")
 # write.csv(bethlehem1_GHCN, file = "GHCN/bethlehem1_GHCN.csv")
 # write.csv(bethlehem2_GHCN, file = "GHCN/bethlehem2_GHCN.csv")
 # write.csv(bethlehem3_GHCN, file = "GHCN/bethlehem3_GHCN.csv")
 # write.csv(stjohnsbury_GHCN, file = "GHCN/stjohnsbury_GHCN.csv")
-#
+# 
 # hanover_GHCN <- read.csv(file="hanover_GHCN.csv")
 # bethlehem1_GHCN <- read.csv(file="bethlehem1_GHCN.csv")
 # bethlehem2_GHCN <- read.csv(file="bethlehem2_GHCN.csv")
 # bethlehem3_GHCN <- read.csv(file="bethlehem3_GHCN.csv")
 # stjohnsbury_GHCN <- read.csv(file="stjohnsbury_GHCN.csv")
+
 myvars <- c("YEAR", "MONTH", "DAY", "PRCP.VALUE", "PRCP.MFLAG", "PRCP.QFLAG", "PRCP.SFLAG")
 hanover_precip <- hanover_GHCN[myvars]
 bethlehem1_precip <- bethlehem1_GHCN[myvars]
 bethlehem2_precip <- bethlehem2_GHCN[myvars]
 bethlehem3_precip <- bethlehem3_GHCN[myvars]
 stjohnsbury_precip <- stjohnsbury_GHCN[myvars]
+
 # monthly precip
 hanover_precip_missing <- aggregate(PRCP.VALUE ~ YEAR + MONTH, data = hanover_precip, function(x) {sum(is.na(x))}, na.action = NULL)
 hanover_precip_sum <- aggregate(PRCP.VALUE ~ YEAR + MONTH, FUN = sum, data = hanover_precip)
@@ -260,83 +60,101 @@ hanover_merge <- merge(hanover_precip_sum, hanover_precip_missing, by = c("YEAR"
 colnames(hanover_merge) <- c("year","month","hanover_prcp","days_missing")
 hanover_merge$hanover_prcp[(hanover_merge$days_missing > 3)] <- NA
 hanover_merge$days_missing <- NULL
+
 bethlehem1_precip_missing <- aggregate(PRCP.VALUE ~ YEAR + MONTH, data = bethlehem1_precip, function(x) {sum(is.na(x))}, na.action = NULL)
 bethlehem1_precip_sum <- aggregate(PRCP.VALUE ~ YEAR + MONTH, FUN = sum, data = bethlehem1_precip)
 bethlehem1_merge <- merge(bethlehem1_precip_sum, bethlehem1_precip_missing, by = c("YEAR","MONTH"), all = TRUE)
 colnames(bethlehem1_merge) <- c("year","month","bethlehem1_prcp","days_missing")
 bethlehem1_merge$bethlehem1_prcp[(bethlehem1_merge$days_missing > 3)] <- NA
 bethlehem1_merge$days_missing <- NULL
+
 bethlehem2_precip_missing <- aggregate(PRCP.VALUE ~ YEAR + MONTH, data = bethlehem2_precip, function(x) {sum(is.na(x))}, na.action = NULL)
 bethlehem2_precip_sum <- aggregate(PRCP.VALUE ~ YEAR + MONTH, FUN = sum, data = bethlehem2_precip)
 bethlehem2_merge <- merge(bethlehem2_precip_sum, bethlehem2_precip_missing, by = c("YEAR","MONTH"), all = TRUE)
 colnames(bethlehem2_merge) <- c("year","month","bethlehem2_prcp","days_missing")
 bethlehem2_merge$bethlehem2_prcp[(bethlehem2_merge$days_missing > 3)] <- NA
 bethlehem2_merge$days_missing <- NULL
+
 bethlehem3_precip_missing <- aggregate(PRCP.VALUE ~ YEAR + MONTH, data = bethlehem3_precip, function(x) {sum(is.na(x))}, na.action = NULL)
 bethlehem3_precip_sum <- aggregate(PRCP.VALUE ~ YEAR + MONTH, FUN = sum, data = bethlehem3_precip)
 bethlehem3_merge <- merge(bethlehem3_precip_sum, bethlehem3_precip_missing, by = c("YEAR","MONTH"), all = TRUE)
 colnames(bethlehem3_merge) <- c("year","month","bethlehem3_prcp","days_missing")
 bethlehem3_merge$bethlehem3_prcp[(bethlehem3_merge$days_missing > 3)] <- NA
 bethlehem3_merge$days_missing <- NULL
+
 stjohnsbury_precip_missing <- aggregate(PRCP.VALUE ~ YEAR + MONTH, data = stjohnsbury_precip, function(x) {sum(is.na(x))}, na.action = NULL)
 stjohnsbury_precip_sum <- aggregate(PRCP.VALUE ~ YEAR + MONTH, FUN = sum, data = stjohnsbury_precip)
 stjohnsbury_merge <- merge(stjohnsbury_precip_sum, stjohnsbury_precip_missing, by = c("YEAR","MONTH"), all = TRUE)
 colnames(stjohnsbury_merge) <- c("year","month","stjohnsbury_prcp","days_missing")
 stjohnsbury_merge$stjohnsbury_prcp[(stjohnsbury_merge$days_missing > 3)] <- NA
 stjohnsbury_merge$days_missing <- NULL
+
 merge1 <- merge(hanover_merge, bethlehem1_merge, by = c("year","month"), all = TRUE)
 merge2 <- merge(merge1, bethlehem2_merge, by = c("year","month"), all = TRUE)
 merge3 <- merge(merge2, bethlehem3_merge, by = c("year","month"), all = TRUE)
 merge4 <- merge(merge3, stjohnsbury_merge, by = c("year","month"), all = TRUE)
+
 merge4$avg_prcp <- rowMeans(merge4[3:7], na.rm=TRUE)
+
 merge4$avg_prcp[is.nan(merge4$avg_prcp)]<-NA
 mean_prcp <- merge4[ , c("year","month","avg_prcp")]
+
 year <- as.matrix(mean_prcp$year)
 month <- as.matrix(mean_prcp$month)
 year_month <- paste(year,month,sep="-")
 year_month <- as.matrix(year_month)
+
 # water year June 1st - May 31st
 # assign water year depending if month < 6
 water_year <- function(year,month)
 {
-tYear <- as.numeric(year)
-tMon <- as.numeric(month)
-WYear <- ifelse(tMon<6,tYear-1,tYear)
-return (WYear)
+  tYear <- as.numeric(year)
+  tMon <- as.numeric(month)
+  WYear <- ifelse(tMon<6,tYear-1,tYear)
+  return (WYear)
 }
 wy <- water_year(year,month)
 wy <- as.matrix(wy)
+
 mean_prcp <- cbind(mean_prcp,wy)
 rm(wy)
+
 mean_prcp_missing <- aggregate(avg_prcp ~ wy, data = mean_prcp, function(x) {sum(is.na(x))}, na.action = NULL)
 mean_prcp_sum <- aggregate(avg_prcp ~ wy, data = mean_prcp, FUN = sum)
 merge_annual <- merge(mean_prcp_sum, mean_prcp_missing, by = c("wy"), all = TRUE)
+
 colnames(merge_annual) <- c("wy","regional_pre_avg_mm","months_missing")
 merge_annual$regional_pre_avg_mm[(merge_annual$months_missing > 0)] <- NA
 merge_annual$months_missing <- NULL
+
 #Download precipitation data by watershed
 inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/14/14/c606bfe2f2deb3fa3eabf692ae15f02d"
 infile1 <- tempfile()
 try(download.file(inUrl1,infile1,method="curl"))
 if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
+
 dt1 <-read.csv(infile1,header=F
-,skip=1
-,sep=","
-, col.names=c(
-"DATE",
-"watershed",
-"Precip"    ), check.names=TRUE)
+               ,skip=1
+               ,sep=","
+               , col.names=c(
+                 "DATE",
+                 "watershed",
+                 "Precip"    ), check.names=TRUE)
+
 unlink(infile1)
-# attempting to convert dt1$DATE dateTime string to R date structure (date or POSIXct)
+
+# attempting to convert dt1$DATE dateTime string to R date structure (date or POSIXct)                                
 tmpDateFormat<-"%Y-%m-%d"
 tmp1DATE<-as.Date(dt1$DATE,format=tmpDateFormat)
 # Keep the new dates only if they all converted correctly
-if(length(tmp1DATE) == length(tmp1DATE[!is.na(tmp1DATE)])){dt1$DATE <- tmp1DATE } else {print("Date conversion failed for dt1$DATE. Please inspect the data and do the date conversion yourself.")}
-rm(tmpDateFormat,tmp1DATE)
+if(length(tmp1DATE) == length(tmp1DATE[!is.na(tmp1DATE)])){dt1$DATE <- tmp1DATE } else {print("Date conversion failed for dt1$DATE. Please inspect the data and do the date conversion yourself.")}                                                                    
+rm(tmpDateFormat,tmp1DATE) 
 if (class(dt1$watershed)!="factor") dt1$watershed<- as.factor(dt1$watershed)
-if (class(dt1$Precip)=="factor") dt1$Precip <-as.numeric(levels(dt1$Precip))[as.integer(dt1$Precip) ]
+if (class(dt1$Precip)=="factor") dt1$Precip <-as.numeric(levels(dt1$Precip))[as.integer(dt1$Precip) ]               
 if (class(dt1$Precip)=="character") dt1$Precip <-as.numeric(dt1$Precip)
+
 precipitation <- dt1
+
 colnames(precipitation) <- c("date","watershed","precip_mm")
 precipitation$watershed <- as.character(precipitation$watershed)
 precipitation$watershed[(precipitation$watershed == "W1")] <- 1
@@ -348,6 +166,7 @@ precipitation$watershed[(precipitation$watershed == "W6")] <- 6
 precipitation$watershed[(precipitation$watershed == "W7")] <- 7
 precipitation$watershed[(precipitation$watershed == "W8")] <- 8
 precipitation$watershed[(precipitation$watershed == "W9")] <- 9
+
 temp_date <- precipitation$date
 year <- substr(temp_date,1,4)
 year <- as.matrix(year)
@@ -355,18 +174,22 @@ month <-  substr(temp_date,6,7)
 month <- as.matrix(month)
 year_month <- paste(year,month,sep="-")
 year_month <- as.matrix(year_month)
+
 # water year June 1st - May 31st
 # assign water year depending if month < 6
 water_year <- function(year,month)
 {
-tYear <- as.numeric(year)
-tMon <- as.numeric(month)
-WYear <- ifelse(tMon<6,tYear-1,tYear)
-return (WYear)
+  tYear <- as.numeric(year)
+  tMon <- as.numeric(month)
+  WYear <- ifelse(tMon<6,tYear-1,tYear)
+  return (WYear)
 }
+
 wy <- water_year(year,month)
 wy <- as.matrix(wy)
+
 precipitation <- cbind(precipitation,wy)
+
 precipitation_W1 <- subset(precipitation,(watershed==1))
 precipitation_W2 <- subset(precipitation,(watershed==2))
 precipitation_W3 <- subset(precipitation,(watershed==3))
@@ -376,6 +199,7 @@ precipitation_W6 <- subset(precipitation,(watershed==6))
 precipitation_W7 <- subset(precipitation,(watershed==7))
 precipitation_W8 <- subset(precipitation,(watershed==8))
 precipitation_W9 <- subset(precipitation,(watershed==9))
+
 precipitation_W1$watershed <- NULL
 precipitation_W2$watershed <- NULL
 precipitation_W3$watershed <- NULL
@@ -385,6 +209,7 @@ precipitation_W6$watershed <- NULL
 precipitation_W7$watershed <- NULL
 precipitation_W8$watershed <- NULL
 precipitation_W9$watershed <- NULL
+
 colnames(precipitation_W1) <- c("date","precip_mm_W1","wy")
 colnames(precipitation_W2) <- c("date","precip_mm_W2","wy")
 colnames(precipitation_W3) <- c("date","precip_mm_W3","wy")
@@ -394,42 +219,52 @@ colnames(precipitation_W6) <- c("date","precip_mm_W6","wy")
 colnames(precipitation_W7) <- c("date","precip_mm_W7","wy")
 colnames(precipitation_W8) <- c("date","precip_mm_W8","wy")
 colnames(precipitation_W9) <- c("date","precip_mm_W9","wy")
+
 WY_day_count_W1 <- count(precipitation_W1, "wy")
 keep_wy_W1 <- subset(WY_day_count_W1,(freq>=365))
 precipitation_W1_merge <- merge(precipitation_W1,keep_wy_W1, by = c("wy"))
 precipitation_W1_merge$freq <- NULL
+
 WY_day_count_W2 <- count(precipitation_W2, "wy")
 keep_wy_W2 <- subset(WY_day_count_W2,(freq>=365))
 precipitation_W2_merge <- merge(precipitation_W2,keep_wy_W2, by = c("wy"))
-precipitation_W2_merge$freq <- NULL
+precipitation_W2_merge$freq <- NULL 
+
 WY_day_count_W3 <- count(precipitation_W3, "wy")
 keep_wy_W3 <- subset(WY_day_count_W3,(freq>=365))
 precipitation_W3_merge <- merge(precipitation_W3,keep_wy_W3, by = c("wy"))
-precipitation_W3_merge$freq <- NULL
+precipitation_W3_merge$freq <- NULL 
+
 WY_day_count_W4 <- count(precipitation_W4, "wy")
 keep_wy_W4 <- subset(WY_day_count_W4,(freq>=365))
 precipitation_W4_merge <- merge(precipitation_W4,keep_wy_W4, by = c("wy"))
-precipitation_W4_merge$freq <- NULL
+precipitation_W4_merge$freq <- NULL 
+
 WY_day_count_W5 <- count(precipitation_W5, "wy")
 keep_wy_W5 <- subset(WY_day_count_W5,(freq>=365))
 precipitation_W5_merge <- merge(precipitation_W5,keep_wy_W5, by = c("wy"))
-precipitation_W5_merge$freq <- NULL
+precipitation_W5_merge$freq <- NULL 
+
 WY_day_count_W6 <- count(precipitation_W6, "wy")
 keep_wy_W6 <- subset(WY_day_count_W6,(freq>=365))
 precipitation_W6_merge <- merge(precipitation_W6,keep_wy_W6, by = c("wy"))
-precipitation_W6_merge$freq <- NULL
+precipitation_W6_merge$freq <- NULL 
+
 WY_day_count_W7 <- count(precipitation_W7, "wy")
 keep_wy_W7 <- subset(WY_day_count_W7,(freq>=365))
 precipitation_W7_merge <- merge(precipitation_W7,keep_wy_W7, by = c("wy"))
-precipitation_W7_merge$freq <- NULL
+precipitation_W7_merge$freq <- NULL 
+
 WY_day_count_W8 <- count(precipitation_W8, "wy")
 keep_wy_W8 <- subset(WY_day_count_W8,(freq>=365))
 precipitation_W8_merge <- merge(precipitation_W8,keep_wy_W8, by = c("wy"))
-precipitation_W8_merge$freq <- NULL
+precipitation_W8_merge$freq <- NULL 
+
 WY_day_count_W9 <- count(precipitation_W9, "wy")
 keep_wy_W9 <- subset(WY_day_count_W9,(freq>=365))
 precipitation_W9_merge <- merge(precipitation_W9,keep_wy_W9, by = c("wy"))
 precipitation_W9_merge$freq <- NULL
+
 pre <- merge(precipitation_W1_merge,precipitation_W2_merge, by = c("date","wy"), all = TRUE)
 pre <- merge(pre,precipitation_W3_merge, by = c("date","wy"), all = TRUE)
 pre <- merge(pre,precipitation_W4_merge, by = c("date","wy"), all = TRUE)
@@ -438,75 +273,96 @@ pre <- merge(pre,precipitation_W6_merge, by = c("date","wy"), all = TRUE)
 pre <- merge(pre,precipitation_W7_merge, by = c("date","wy"), all = TRUE)
 pre <- merge(pre,precipitation_W8_merge, by = c("date","wy"), all = TRUE)
 pre <- merge(pre,precipitation_W9_merge, by = c("date","wy"), all = TRUE)
+
 pre$date <- NULL
 pre_wy <- aggregate(pre, by=list(pre$wy), FUN = sum)
+
 pre_wy <- pre_wy[c("Group.1", "precip_mm_W3")]
 colnames(pre_wy) <- c("wy","hb_pre_w3_mm")
+
 merger <- merge(pre_wy, merge_annual, by = c("wy"), all = TRUE)
-hb_only <- merger[!is.na(merger$hb_pre_w3_mm), ]
+
+hb_only <- merger[!is.na(merger$hb_pre_w3_mm), ] 
+
 hb_pre_sen <- sens.slope(hb_only$hb_pre_w3_mm, conf.level = 0.95)
 hb_pre_sen
 hb_only$hb_pre_slp <- NA
 hb_only$hb_pre_slp[1] <- median(hb_only$hb_pre_w3_mm)-
-(((nrow(hb_only)-1)/2)*hb_pre_sen$estimate)
+  (((nrow(hb_only)-1)/2)*hb_pre_sen$estimate)
 hb_only$hb_pre_slp[nrow(hb_only)] <- median(hb_only$hb_pre_w3_mm)+
-(((nrow(hb_only)-1)/2)*hb_pre_sen$estimate)
-hb_only$hb_pre_slp <-
-c(na.approx(hb_only$hb_pre_slp))
+  (((nrow(hb_only)-1)/2)*hb_pre_sen$estimate)
+hb_only$hb_pre_slp <- 
+  c(na.approx(hb_only$hb_pre_slp))
 length(hb_only$hb_pre_slp)*hb_pre_sen$estimate
+
 regional_pre_sen <- sens.slope(hb_only$regional_pre_avg_mm, conf.level = 0.95)
 regional_pre_sen
 hb_only$regional_pre_slp <- NA
 hb_only$regional_pre_slp[1] <- median(hb_only$regional_pre_avg_mm)-
-(((nrow(hb_only)-1)/2)*regional_pre_sen$estimate)
+  (((nrow(hb_only)-1)/2)*regional_pre_sen$estimate)
 hb_only$regional_pre_slp[nrow(hb_only)] <- median(hb_only$regional_pre_avg_mm)+
-(((nrow(hb_only)-1)/2)*regional_pre_sen$estimate)
-hb_only$regional_pre_slp <-
-c(na.approx(hb_only$regional_pre_slp))
+  (((nrow(hb_only)-1)/2)*regional_pre_sen$estimate)
+hb_only$regional_pre_slp <- 
+  c(na.approx(hb_only$regional_pre_slp))
 length(hb_only$regional_pre_slp)*regional_pre_sen$estimate
+
 hb_only$hb_pre_w3_mm <- NULL
 hb_only$regional_pre_avg_mm <- NULL
+
 pre_trends <- merge(merger,hb_only, by = c("wy"), all = TRUE)
+
 hb_pre_w3_yr_count <- sum(sapply(pre_trends$hb_pre_slp, function(x) sum(!is.na(x))))
 hb_pre_w3_yr_count_slp_time <- hb_pre_sen$estimates * hb_pre_w3_yr_count
 hb_pre_w3_sen_slp <- format(round(hb_pre_sen$estimates, digits=1), nsmall = 1)
 hb_pre_w3_sen_p <- format(round(hb_pre_sen$p.value, digits=4), nsmall = 3, scientific = F)
+
+
 regional_pre_yr_count <- sum(sapply(pre_trends$regional_pre_slp, function(x) sum(!is.na(x))))
 regional_pre_yr_count_slp_time <- regional_pre_sen$estimates * regional_pre_yr_count
 regional_pre_sen_slp <- format(round(regional_pre_sen$estimates, digits=1), nsmall =1)
 regional_pre_sen_p <- format(round(regional_pre_sen$p.value, digits=4), nsmall = 3, scientific = F)
+
+
 maxval <- max(c(pre_trends$hb_pre_w3_mm, pre_trends$regional_pre_avg_mm), na.rm=TRUE)
 minval <- min(c(pre_trends$hb_pre_w3_mm, pre_trends$regional_pre_avg_mm), na.rm=TRUE)
 maxwy <- max(c(hb_only$wy), na.rm=TRUE)
+
+
 library("zoo")
 library("ggpmisc")
+
 precipit
+
 precipit <- ggplot() +
-geom_line(data = pre_trends,aes(x = wy, y= hb_pre_w3_mm), colour="gold3", lwd=0.6) +
-geom_line(data = pre_trends,aes(x = wy, y= hb_pre_slp), linetype = "dashed", colour="gold3", lwd=0.6) + xlab("")+
-geom_line(data = pre_trends,aes(x = wy, y= regional_pre_avg_mm), colour="blue", lwd=0.6) +
-geom_line(data = pre_trends,aes(x = wy, y= regional_pre_slp), linetype = "dashed", colour="blue", lwd=0.6) + xlab("")+
-ylab("Precipitation (mm)")+
-theme_bw()+
+  geom_line(data = pre_trends,aes(x = wy, y= hb_pre_w3_mm), colour="gold3", lwd=0.6) +
+  geom_line(data = pre_trends,aes(x = wy, y= hb_pre_slp), linetype = "dashed", colour="gold3", lwd=0.6) + xlab("")+
+  geom_line(data = pre_trends,aes(x = wy, y= regional_pre_avg_mm), colour="blue", lwd=0.6) +
+  geom_line(data = pre_trends,aes(x = wy, y= regional_pre_slp), linetype = "dashed", colour="blue", lwd=0.6) + xlab("")+
+  ylab("Precipitation (mm)")+
+  theme_bw()+
 scale_x_continuous(limits = c(1890,(ceiling((maxwy-10)/20)*20)+10), expand = c(0,0), breaks = seq(1890,(ceiling((maxwy-10)/20)*20)+10, by = 20)) +
 scale_y_continuous(limits = c((floor(minval/200)*200)-100,(ceiling(maxval/200)*200)+100), expand = c(0,0),breaks = seq((floor(minval/200)*200)-100,(ceiling(maxval/200)*200)+100, by = 200)) +
-theme(plot.title = element_text(size = 20, face = "bold", hjus=0.04, vjus=-9),
-plot.background = element_rect(fill = "transparent"),
-plot.margin = unit(c(3,7,-3,1), "mm"),
-axis.ticks = element_line(colour = "black", size = 0.5),
-axis.ticks.length=unit(.25, "cm"),
-axis.text.y=element_text(size=15, colour = "black"),
-axis.title.y=element_text(size=17, colour = "black", margin = margin(t = 0, r = 10, b = 0, l = 0)),
-axis.text.x=element_text(size=15, colour = "black"),
-panel.grid.major = element_blank(),
-panel.grid.minor = element_blank(),
-panel.border = element_rect(fill=NA, colour = "black", size=1, linetype="solid"),
-panel.background = element_rect(fill = "transparent",colour = NA)
-) +
-geom_text(aes(x=1940, y=2000, label = paste0("an increase of ",hb_pre_w3_sen_slp, " mm/yr (",hb_pre_w3_yr_count," years); p = ",hb_pre_w3_sen_p)), size = 4.5, color="gold3") +
-geom_text(aes(x=1940, y=1900, label = paste0("an increase of ",regional_pre_sen_slp, " mm/yr (",hb_pre_w3_yr_count," years); p = ",regional_pre_sen_p)), size = 4.5, color="blue") +
-xlab("Year")
+  theme(plot.title = element_text(size = 20, face = "bold", hjus=0.04, vjus=-9), 
+        plot.background = element_rect(fill = "transparent"),
+        plot.margin = unit(c(3,7,-3,1), "mm"),
+        axis.ticks = element_line(colour = "black", size = 0.5),
+        axis.ticks.length=unit(.25, "cm"),
+        axis.text.y=element_text(size=15, colour = "black"),
+        axis.title.y=element_text(size=17, colour = "black", margin = margin(t = 0, r = 10, b = 0, l = 0)),
+        axis.text.x=element_text(size=15, colour = "black"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_rect(fill=NA, colour = "black", size=1, linetype="solid"),
+        panel.background = element_rect(fill = "transparent",colour = NA)
+  ) +   
+  geom_text(aes(x=1940, y=2000, label = paste0("an increase of ",hb_pre_w3_sen_slp, " mm/yr (",hb_pre_w3_yr_count," years); p = ",hb_pre_w3_sen_p)), size = 4.5, color="gold3") +
+  geom_text(aes(x=1940, y=1900, label = paste0("an increase of ",regional_pre_sen_slp, " mm/yr (",hb_pre_w3_yr_count," years); p = ",regional_pre_sen_p)), size = 4.5, color="blue") +
+  xlab("Year")
+  
 precipit
+
 pc<-ggplotly(precipit)
 pc
+
 htmlwidgets::saveWidget(as_widget(pc), "climateChange/regional_and_HB_precip.html")
+
