@@ -1,0 +1,1 @@
+{"frames":[{"func":"ggplot(annairgrow, aes(x = wyear, y = avtemp))","file":"","line_number":0,"end_line_number":0,"character_number":0,"end_character_number":0}],"message":"Error in ggplot(annairgrow, aes(x = wyear, y = avtemp)) : \n  object 'annairgrow' not found\n"}
