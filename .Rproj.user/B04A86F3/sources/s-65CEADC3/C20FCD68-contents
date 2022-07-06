@@ -28,12 +28,12 @@ library(plotly)
  
  
 # could also use:
-# hanover_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00273850.dly")
-# bethlehem1_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00270703.dly")
-# bethlehem2_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00270706.dly")
-# bethlehem3_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00270707.dly")
-# stjohnsbury_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00437054.dly")
-# 
+hanover_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00273850.dly")
+bethlehem1_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00270703.dly")
+bethlehem2_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00270706.dly")
+bethlehem3_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00270707.dly")
+stjohnsbury_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00437054.dly")
+
 # write.csv(hanover_GHCN, file = "GHCN/hanover_GHCN.csv")
 # write.csv(bethlehem1_GHCN, file = "GHCN/bethlehem1_GHCN.csv")
 # write.csv(bethlehem2_GHCN, file = "GHCN/bethlehem2_GHCN.csv")
@@ -331,7 +331,7 @@ maxwy <- max(c(hb_only$wy), na.rm=TRUE)
 library("zoo")
 library("ggpmisc")
 
-precipit
+head(pre_trends)
 
 precipit <- ggplot() +
   geom_line(data = pre_trends,aes(x = wy, y= hb_pre_w3_mm), colour="gold3", lwd=0.6) +
@@ -339,6 +339,7 @@ precipit <- ggplot() +
   geom_line(data = pre_trends,aes(x = wy, y= regional_pre_avg_mm), colour="blue", lwd=0.6) +
   geom_line(data = pre_trends,aes(x = wy, y= regional_pre_slp), linetype = "dashed", colour="blue", lwd=0.6) + xlab("")+
   ylab("Precipitation (mm)")+
+  geom_smooth(method="lm", se="F")+
   theme_bw()+
 scale_x_continuous(limits = c(1890,(ceiling((maxwy-10)/20)*20)+10), expand = c(0,0), breaks = seq(1890,(ceiling((maxwy-10)/20)*20)+10, by = 20)) +
 scale_y_continuous(limits = c((floor(minval/200)*200)-100,(ceiling(maxval/200)*200)+100), expand = c(0,0),breaks = seq((floor(minval/200)*200)-100,(ceiling(maxval/200)*200)+100, by = 200)) +
@@ -355,8 +356,8 @@ scale_y_continuous(limits = c((floor(minval/200)*200)-100,(ceiling(maxval/200)*2
         panel.border = element_rect(fill=NA, colour = "black", size=1, linetype="solid"),
         panel.background = element_rect(fill = "transparent",colour = NA)
   ) +   
-  geom_text(aes(x=1940, y=2000, label = paste0("an increase of ",hb_pre_w3_sen_slp, " mm/yr (",hb_pre_w3_yr_count," years); p = ",hb_pre_w3_sen_p)), size = 4.5, color="gold3") +
-  geom_text(aes(x=1940, y=1900, label = paste0("an increase of ",regional_pre_sen_slp, " mm/yr (",hb_pre_w3_yr_count," years); p = ",regional_pre_sen_p)), size = 4.5, color="blue") +
+  geom_text(aes(x=1935, y=2000, label = paste0("Hubbard Brook, NH has increased ",hb_pre_w3_sen_slp, " mm/yr (",hb_pre_w3_yr_count," years); p = ",hb_pre_w3_sen_p)), size = 4.5, color="gold3") +
+  geom_text(aes(x=1935, y=1900, label = paste0("Regional average has increased ",regional_pre_sen_slp, " mm/yr (",hb_pre_w3_yr_count," years); p = ",regional_pre_sen_p)), size = 4.5, color="blue") +
   xlab("Year")
   
 precipit
