@@ -6,7 +6,7 @@
 library(ggplot2) # graphing
 library(tidyr) # dataframe manipulation
 library(lubridate) # for handling date times
-library(plotly)
+library(plotly) # making interactive graphs
 
 
 # Package ID: knb-lter-hbr.67.23 Cataloging System:https://pasta.edirepository.org.
@@ -78,7 +78,6 @@ if (class(dt1$pH)=="factor") dt1$pH <-as.numeric(levels(dt1$pH))[as.integer(dt1$
 if (class(dt1$pH)=="character") dt1$pH <-as.numeric(dt1$pH)
 
 # Convert Missing Values to NA for non-dates
-
 dt1$BIOC <- ifelse((trimws(as.character(dt1$BIOC))==trimws("-9999.99")),NA,dt1$BIOC)               
 suppressWarnings(dt1$BIOC <- ifelse(!is.na(as.numeric("-9999.99")) & (trimws(as.character(dt1$BIOC))==as.character(as.numeric("-9999.99"))),NA,dt1$BIOC))
 dt1$RESPC <- ifelse((trimws(as.character(dt1$RESPC))==trimws("-9999.99")),NA,dt1$RESPC)               
@@ -102,20 +101,12 @@ suppressWarnings(dt1$pH <- ifelse(!is.na(as.numeric("-9999.99")) & (trimws(as.ch
 
 #####
 
-head(dt2)
-head(dt1)
-
-table(dt1$Project)
-table(dt2$Project)
-
-names(dt1)
-names(dt2)
-
 table(dt1$Treatment)
 dt1$doy<-yday(dt1$Date)
 
 table(dt1$Hor)
 
+## add names for elevations
 dt1[dt1$El=="U", "Elevation"]<-"Upper"
 dt1[dt1$El=="SF", "Elevation"]<-"Spruce Fir"
 dt1[dt1$El=="H", "Elevation"]<-"High"
@@ -132,8 +123,6 @@ table(dt1$Season)
 
 
 
-
-
 # now factor in the right order
 dt1$Elevation<-factor(dt1$Elevation, levels=c("Low","Mid","High","Spruce Fir","Upper"))
 
@@ -141,45 +130,44 @@ dt1$Hor<-factor(dt1$Hor, levels=c("Oi/Oe","Oa/A", "Min"))
 
 
 
-table(dt1$Hor)
-
-microC<-ggplot(dt1, aes(x=Year, y=BIOC, col=doy,group=Plot))+
+## data visualization, microbial biomass C
+C<-ggplot(dt1, aes(x=Year, y=BIOC, col=doy,group=Plot))+
   geom_jitter()+facet_grid(Hor ~ Elevation, scales="free_y")+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   labs(col='Day of year')+
   ylab("Microbial Biomass C (mg/kg)")+
   ggtitle("Sampling locations by elevation and soil horizon for measurements of microbial biomass C")
 
-picroC<-ggplotly(microC)
+Cplot<-ggplotly(C)
 
+Cplot
+
+
+htmlwidgets::saveWidget(as_widget(Cplot), "climateChange/microbial_biomass_C.html")
+
+
+
+
+##########  annual averages, then graph
+
+biocav<-aggregate(list(BIOC=dt1$BIOC), by=list(Year=dt1$Year, Hor=dt1$Hor), FUN="mean", na.rm=T)
+head(microC)
+
+
+
+microC<-ggplot(biocav, aes(x=Year, y=BIOC, col=Hor))+
+  geom_point()+geom_line()+
+  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  labs(col='Day of year')+
+  scale_color_manual(values=c("deepskyblue2","orange","grey"))+
+  ylab("Microbial biomass C (mg/kg)")+
+  ggtitle("Oie, Oa, and mineral soil horizons in the Bear Brook watershed (west of the reference watershed 6)")
+microC
+picroC<-ggplotly(microC)
 picroC
 
 
-
-htmlwidgets::saveWidget(as_widget(picroC), "climateChange/microbial_biomass_C.html")
-head(dt1)
-
-table(dt1$Se)
-
-
-
-
-## now Nmin.  There are soem high values. 
-# microN<-ggplot(dt1, aes(x=Year, y=MIN, col=doy,group=Plot))+
-#   geom_point()+facet_grid(Hor ~ Elevation, scales="free_y")+
-#   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-#   labs(col='Day of year')+
-#   ylab("N mineralization (mg/kg/day)")+
-#   ggtitle("Sampling locations by elevation and soil horizon for measurements of N mineralization)")
-# microN
-# 
-# 
-# picroN<-ggplotly(microN)
-# 
-# picroN
-
-
-####  Average to the year level
+####  Average to the year level N mineralization
 nminav<-aggregate(list(Nmin=dt1$MIN), by=list(Year=dt1$Year, Hor=dt1$Hor), FUN="mean", na.rm=T)
 head(nminav)
 
@@ -191,13 +179,60 @@ microN<-ggplot(nminav, aes(x=Year, y=Nmin, col=Hor))+
   labs(col='Day of year')+
   scale_color_manual(values=c("deepskyblue2","orange","grey"))+
   ylab("N mineralization (mg/kg/day)")+
-  ggtitle("Microbial biomass N in the Oie, Oa, and mineral soil horizons in the Bear Brook watershed (west of the reference watershed 6)")
-microN
-
-
+  ggtitle("N in the Oie, Oa, and mineral soil horizons in the Bear Brook watershed (west of the reference watershed 6)")
+picroN<-ggplotly(microN)
+picroN
 htmlwidgets::saveWidget(as_widget(picroN), "climateChange/N_mineralization.html")
 
 
 
+####  Average to the year level soil respiration
+respav<-aggregate(list(Resp=dt1$RESPC), by=list(Year=dt1$Year, Hor=dt1$Hor), FUN="mean", na.rm=T)
+head(respav)
+
+
+
+microresp<-ggplot(respav, aes(x=Year, y=Resp, col=Hor))+
+  geom_point()+geom_line()+
+  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  labs(col='Day of year')+
+  scale_color_manual(values=c("deepskyblue2","orange","grey"))+
+  ylab("Respiration (mg/kg/day)")+
+  ggtitle("Microbial biomass N in the Oie, Oa, and mineral soil horizons in the Bear Brook watershed (west of the reference watershed 6)")
+microresp
+picroresp<-ggplotly(microresp)
+
+
+####  Average to the year level, nitrification
+respnit<-aggregate(list(NIT=dt1$NIT), by=list(Year=dt1$Year, Hor=dt1$Hor), FUN="mean", na.rm=T)
+head(respnit)
+
+
+
+micronit<-ggplot(respnit, aes(x=Year, y=NIT, col=Hor))+
+  geom_point()+geom_line()+
+  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  labs(col='Day of year')+
+  scale_color_manual(values=c("deepskyblue2","orange","grey"))+
+  ylab("potetntial net nitrification (mg/kg/day)")+
+  ggtitle("Microbial biomass N in the Oie, Oa, and mineral soil horizons in the Bear Brook watershed (west of the reference watershed 6)")
+micronit
+
+picronit<-ggplotly(micronit)
+picronit
+
+
+picroresp
+
+
+# bring plotly charts together
+plotfinal<-subplot(picroC, picroN, picronit,picroresp, nrows=2,
+                   shareX = TRUE, titleY=TRUE,margin=.05)
+
+plotfinal
+
+
+# this line writes the html file to create interactive graphs for the online book
+htmlwidgets::saveWidget(as_widget(plotfinal), "soilBiology/microb_biomass_activity.html")
 
 
