@@ -51,6 +51,7 @@ if (class(dt1$Phenology_Stage)=="character") dt1$Phenology_Stage <-as.numeric(dt
 ## 
 head(dt1)
 
+table(dt1$SITE)
 
 table(dt1$SEASON)
 
@@ -74,13 +75,15 @@ expand$wyear<-w.year # add water year as a column to precip dataset
 
 head(expand,50)
 
-expav<-aggregate(list(DAY=expand$DAY), by=list(SEASON=expand$SEASON, Year=expand$Year, SPECIES=expand$SPECIES), FUN="mean", na.rm=T)
+expav<-aggregate(list(DAY=expand$DAY), by=list(SEASON=expand$SEASON, Year=expand$Year, SPECIES=expand$SPECIES, SITE=expand$SITE), FUN="mean", na.rm=T)
 
 # We have a data column, but its not formatted as a date
 air$DATE<-ymd(air$date) # change how R interprets Date to be a date
 air$Year<-year(air$DATE)
 
 expav$seasp<-paste( expav$SPECIES, expav$SEASON)
+expav$seasi<-paste( expav$SPECIES, expav$SITE,  expav$SEASON)
+
 
 e1<-ggplot(expav, aes(x=Year, y=DAY, col=SPECIES, group=seasp))+geom_point()+geom_line()+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
@@ -90,4 +93,4 @@ p1<-ggplotly(e1)
 p1
 
 
-htmlwidgets::saveWidget(as_widget(p1), "climateChange/Leaf_expansion_R.html")
+   htmlwidgets::saveWidget(as_widget(p1), "climateChange/Leaf_expansion_R.html")

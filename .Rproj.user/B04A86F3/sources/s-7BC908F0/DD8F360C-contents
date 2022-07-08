@@ -59,7 +59,12 @@ g1<-ggplot(lai_year, aes(x=Year, y=LAI))+geom_point()+  geom_line()+
   ylab("Leaf area index")
 
 
-p1<-ggplotly(g1)
+p1<-ggplotly(g1) %>%
+  layout(title = list(text = paste0('Average leaf area index in Bear Brook at the Hubbard Brook Experimental Forest.',
+                                    '<br>',
+                                    '<sup>',
+                                    'This figure is updated with current data available in the Envrironmental Data Initiative Repository (https://portal.edirepository.org)',
+                                    '</sup>')))
 p1
 
 htmlwidgets::saveWidget(as_widget(p1), "climateChange/LAI_WW6.html")
