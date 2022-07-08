@@ -1,0 +1,1250 @@
+## new volume
+
+
+
+## This code is used for reading data files and computing estimates of measurement error
+library(ggplot2)
+library(ggpubr)
+library(tidyr)
+library(patchwork)
+
+ftg<-read.csv("data_folder/REF_FOREST_TYPE_GROUP.csv",header=T)
+ft<-read.csv("data_folder/REF_FOREST_TYPE.csv",header=T)
+fctree   <-read.csv("data_folder/Trees_REV_FIA_NRS_8_15.csv", header=T)
+seeds   <-read.csv("data_folder/SEEDLING_REV_FIA_NRS.csv", header=T)
+plots   <-read.csv("data_folder/PLOTS_REV_FIA_NRS.csv", header=T)
+subplots<-read.csv("data_folder/SUBPLOT_REV_FIA_NRS.csv", header=T)
+cond    <-read.csv("data_folder/COND_REV_FIA_NRS.csv", header=T)
+bound   <-read.csv("data_folder/BOUNDARY_REV_FIA_NRS.csv", header=T)
+vol<-read.csv("data_folder/vol_estimates_11_16_18.csv", header=T)
+
+
+cond$errCONDID<-cond$F_CONDID!=cond$Q_CONDID
+
+
+
+table(cond$errCONDID, cond$APLOT)
+condid_disagree<-as.data.frame(table( cond$APLOT,is.na(cond$errCONDID)))
+
+
+
+#subp <- read.csv("data_folder/agree_subplots_2_14_22.csv", header=T)
+#dim(subp)
+
+FNF<-read.csv("data_folder/YanaiR - Number of trees by F_F subplots_Revised.csv", head=T)
+head(FNF)
+
+
+
+
+# create natural keys
+##########################################
+fctree$APLOT<-paste(fctree$STATECD,  fctree$COUNTYCD, fctree$PLOT)
+fctree$BPLOT<-paste(fctree$STATECD,  fctree$COUNTYCD, fctree$PLOT, fctree$F_SUBP)
+#
+vol$APLOT<-paste(vol$STATECD,  vol$COUNTYCD, vol$PLOT)
+vol$BPLOT<-paste(vol$STATECD,  vol$COUNTYCD, vol$PLOT, vol$SUBP)
+#
+plots$APLOT<-paste(plots$STATECD, plots$COUNTYCD, plots$PLOT)
+#
+subplots$APLOT<-paste(subplots$STATECD,  subplots$COUNTYCD, subplots$PLOT)
+subplots$BPLOT<-paste(subplots$STATECD,  subplots$COUNTYCD, subplots$PLOT, subplots$SUBP)
+#
+cond$APLOT<-paste(cond$STATECD, cond$COUNTYCD, cond$PLOT)
+
+FNF$APLOT<-paste(FNF$STATECD,  FNF$COUNTYCD, FNF$PLOT_FIADB)
+
+FNF$BPLOT<-paste(FNF$STATECD,  FNF$COUNTYCD, FNF$PLOT_FIADB, FNF$SUBP)
+
+FNF$sametree<- FNF$TREE_FLD == FNF$TREE_QA
+  
+table(FNF$sametree)
+table(FNF$TREE_FLD == FNF$TREE_QA) # this makes total sense with what Chuck got.
+
+
+table(FNF$BPLOT %in% vol$BPLOT)
+
+
+vol$sametree<-FNF$sametree[match(vol$BPLOT, FNF$BPLOT)]
+
+
+# of those 5302 subplots, 4885 are in the volume dataset.
+
+
+
+#######################################################
+## convert units
+vol$Q_DIA<-vol$Q_DIA*2.54 #convert inches to cm.
+vol$F_DIA<-vol$F_DIA*2.54
+
+vol$F_DRYBIOT_MG<-vol$F_DRYBIOT*0.00045359237 # lbs to Megagrams
+vol$Q_DRYBIOT_MG<-vol$Q_DRYBIOT*0.00045359237
+
+vol$F_DRYBIOT_KG<-vol$F_DRYBIOT*0.45359237 # lbs to Kilograms
+vol$Q_DRYBIOT_KG<-vol$Q_DRYBIOT*0.45359237
+
+vol$F_VOLCSNET_m3<-vol$F_VOLCSNET*0.02831685 #cubic feet to m3
+vol$Q_VOLCSNET_m3<-vol$Q_VOLCSNET*0.02831685
+
+vol$F_BA_cm2<-(3.14159*(vol$F_DIA/2)^2) # calculate basal area for the trees.
+vol$Q_BA_cm2<-(3.14159*(vol$Q_DIA/2)^2)
+
+vol$F_BA_m2<-(3.14159*(vol$F_DIA/2)^2) /100# calculate basal area for the trees in m
+vol$Q_BA_m2<-(3.14159*(vol$Q_DIA/2)^2) /100
+
+
+#######################################################
+# tree-level volume error
+vol$errtreevol<- ((as.numeric(vol$F_VOLCSNET_m3)-as.numeric(vol$Q_VOLCSNET_m3)))
+vol$errabstreevol<- (abs(as.numeric(vol$F_VOLCSNET_m3)-as.numeric(vol$Q_VOLCSNET_m3)))
+vol$meantreevol<-rowMeans(vol[c("F_VOLCSNET_m3","Q_VOLCSNET_m3")])
+vol$reltreevol<-vol$errabstreevol/vol$meantreevol
+vol$erracttreevol<-(vol$errabstreevol / vol$meantreevol)*100
+
+
+
+## for biomass!
+vol$errtreebiot<- ((as.numeric(vol$F_DRYBIOT_MG)-as.numeric(vol$Q_DRYBIOT_MG)))
+vol$errabstreebiot<- (abs(as.numeric(vol$F_DRYBIOT_MG)-as.numeric(vol$Q_DRYBIOT_MG)))
+vol$meantreebiot<-rowMeans(vol[c("F_DRYBIOT_MG","Q_DRYBIOT_MG")])
+vol$reltreebiot<-vol$errabstreebiot/vol$meantreebiot
+vol$erracttreebiot<-(vol$errabstreebiot / vol$meantreebiot)*100
+
+
+## for BA!
+vol$errtreeBA<- ((as.numeric(vol$F_BA_cm2)-as.numeric(vol$Q_BA_cm2)))
+vol$errabstreeBA<- (abs(as.numeric(vol$F_BA_cm2)-as.numeric(vol$Q_BA_cm2)))
+vol$meantreeBA<-rowMeans(vol[c("F_BA_cm2","Q_BA_cm2")])
+vol$reltreeBA<-vol$errabstreeBA/vol$meantreeBA
+vol$erracttreeBA<-(vol$errabstreeBA / vol$meantreeBA)*100
+
+
+
+
+vol$errvolcsnet<- ((as.numeric(vol$F_VOLCSNET_m3)-as.numeric(vol$Q_VOLCSNET_m3)))
+vol$errbiot<- ((as.numeric(vol$F_DRYBIOT_MG)-as.numeric(vol$Q_DRYBIOT_MG)))
+vol$errBA<- ((as.numeric(vol$F_BA_m2)-as.numeric(vol$Q_BA_m2)))
+
+
+
+vol$errabsvolcsnet<- (abs(as.numeric(vol$F_VOLCSNET_m3)-as.numeric(vol$Q_VOLCSNET_m3)))
+vol$errabsbiot<- (abs(as.numeric(vol$F_DRYBIOT_MG)-as.numeric(vol$Q_DRYBIOT_MG)))
+vol$errabsBA<- (abs(as.numeric(vol$F_BA_m2)-as.numeric(vol$Q_BA_m2)))
+
+vol$meancsnet<-rowMeans(vol[c("F_VOLCSNET_m3","Q_VOLCSNET_m3")])
+vol$meanbiot<-rowMeans(vol[c("F_DRYBIOT_MG","Q_DRYBIOT_MG")])
+vol$meanBA<- rowMeans(vol[c("F_BA_m2","Q_BA_m2")])
+
+vol$relcsnet<-vol$errabsvolcsnet/vol$meancsnet
+vol$relbiot<-vol$errabsbiot/vol$meanbiot
+vol$relBA<-vol$errabsBA/vol$meanBA
+
+vol$erractvolcsnet<-(vol$errabsvolcsnet/vol$meancsnet)*100
+vol$erractbiot<-(vol$errabsbiot/vol$meanbiot)*100
+vol$erractBA<-(vol$errabsBA/vol$meanBA)*100
+
+# ########
+
+#############################################################
+## Add in forest type and state codes to vol, then aggregate while keeping these attributes
+
+# add in forest type from the 'ft' dataframe
+ft$group<-ftg$MEANING[match(ft$TYPGRPCD, ftg$VALUE)]
+# bring in by matching fldtyp to the VALUE column of ft
+# match conf fldtyp to ft VALUE
+cond$typgrp<-ft$group[match(cond$Q_FLDTYP, ft$VALUE)]
+length(table(cond$typgrp)) # 14
+length(unique(cond$Q_FLDTYP)) # 68
+# now bring it into vol
+vol$typgrp<-cond$typgrp[match(vol$APLOT, cond$APLOT)]
+
+# add in the state code, providing state abbrevations. 
+### hard code the 24 states
+#Put into cond
+table(cond$STATECD)
+cond[cond$STATECD=="9","State"]<-"CT"
+cond[cond$STATECD=="10","State"]<-"DE"
+cond[cond$STATECD=="17","State"]<-"IL"
+cond[cond$STATECD=="18","State"]<-"IN"
+cond[cond$STATECD=="19","State"]<-"IA"
+cond[cond$STATECD=="20","State"]<-"KS"
+cond[cond$STATECD=="23","State"]<-"ME"
+cond[cond$STATECD=="24","State"]<-"MD"
+cond[cond$STATECD=="25","State"]<-"MA"
+cond[cond$STATECD=="26","State"]<-"MI"
+cond[cond$STATECD=="27","State"]<-"MN"
+cond[cond$STATECD=="29","State"]<-"MO"
+cond[cond$STATECD=="31","State"]<-"NE"
+cond[cond$STATECD=="33","State"]<-"NH"
+cond[cond$STATECD=="34","State"]<-"NJ"
+cond[cond$STATECD=="36","State"]<-"NY"
+cond[cond$STATECD=="38","State"]<-"ND"
+cond[cond$STATECD=="39","State"]<-"OH"
+cond[cond$STATECD=="42","State"]<-"PA"
+cond[cond$STATECD=="44","State"]<-"RI"
+cond[cond$STATECD=="46","State"]<-"SD"
+cond[cond$STATECD=="50","State"]<-"VT"
+cond[cond$STATECD=="54","State"]<-"WV"
+cond[cond$STATECD=="55","State"]<-"WI"
+#now bring into vol
+vol$State<-cond$State[match(vol$APLOT, cond$APLOT)]
+
+###########################################################
+
+## aggregate vol to make 3 datasets, based off of the column vol$sametree
+table(vol$sametree)
+## where sametree == TRUE for subplots where the crews got the same number of trees (except three subplots)
+## sametree == FALSE for subplots where the crews disagree on tree number, but agreed it was forested condition
+## diff_forest are all other plots that were in the vol dataset, not included in the spreadsheet Chuck sent
+
+
+library(tibble,dplyr,readr)
+library(tidyverse)
+
+vol<-vol %>%  add_column(Sapling = 
+                           if_else(vol$Q_DIA < 12.6, TRUE, FALSE),
+                         .after="Q_BA_cm2")
+
+
+
+# all subplots
+sp.sums.pre<-aggregate(list(  F_DRYBIOT.a=vol$F_DRYBIOT_MG, Q_DRYBIOT.a=vol$Q_DRYBIOT_MG,
+                          F_VOLCSNET.a=vol$F_VOLCSNET_m3,Q_VOLCSNET.a=vol$Q_VOLCSNET_m3,
+                          F_BA.a=vol$F_BA_m2, Q_BA.a=vol$Q_BA_m2),
+                   by=list(BPLOT=vol$BPLOT, Sapling=vol$Sapling), FUN= "sum", na.rm=T)
+
+sap.sums<-sp.sums.pre[sp.sums.pre$Sapling=="TRUE",]
+tree.sums<-sp.sums.pre[sp.sums.pre$Sapling=="FALSE",]
+
+sap.sums$F_DRYBIOT<-sap.sums$F_DRYBIOT.a / 0.00021
+sap.sums$Q_DRYBIOT<-sap.sums$Q_DRYBIOT.a / 0.00021
+sap.sums$F_VOLCSNET<-sap.sums$F_VOLCSNET.a / 0.00021
+sap.sums$Q_VOLCSNET<-sap.sums$Q_VOLCSNET.a / 0.00021
+sap.sums$F_BA<-sap.sums$F_BA.a / 0.00021
+sap.sums$Q_BA<-sap.sums$Q_BA.a / 0.00021
+
+tree.sums$F_DRYBIOT<-tree.sums$F_DRYBIOT.a / 0.00073
+tree.sums$Q_DRYBIOT<-tree.sums$Q_DRYBIOT.a / 0.00073
+tree.sums$F_VOLCSNET<-tree.sums$F_VOLCSNET.a / 0.00073
+tree.sums$Q_VOLCSNET<-tree.sums$Q_VOLCSNET.a / 0.00073
+tree.sums$F_BA<-tree.sums$F_BA.a / 0.00073
+tree.sums$Q_BA<-tree.sums$Q_BA.a / 0.00073
+
+st.sums<-rbind(sap.sums, tree.sums)
+
+head(sp.sums.pre)
+head(st.sums)
+
+
+table(st.sums$Sapling)
+table(sap.sums$Sapling)
+table(tree.sums$Sapling)
+
+table(vol$Q_DIA < 12.6)
+
+table(vol$Sapling)
+
+# now that we've scaled per area for trees and saplings, add the trees back up
+sp.sums<-aggregate(list(  F_DRYBIOT=st.sums$F_DRYBIOT, Q_DRYBIOT=st.sums$Q_DRYBIOT,
+                              F_VOLCSNET=st.sums$F_VOLCSNET,Q_VOLCSNET=st.sums$Q_VOLCSNET,
+                              F_BA=st.sums$F_BA, Q_BA=sp.sums$Q_BA),
+                       by=list(BPLOT=sp.sums$BPLOT), FUN= "sum", na.rm=T)
+
+
+
+
+
+sp.sums$State<-vol$State[match(sp.sums$BPLOT, vol$BPLOT)]
+sp.sums$typgrp<-vol$typgrp[match(sp.sums$BPLOT, vol$BPLOT)]
+
+sp.sums$sametree<-FNF$sametree[match(sp.sums$BPLOT, FNF$BPLOT)]
+
+
+
+head(sp.sums)
+head(condid_disagree)
+
+table(sp.sums$errcond)
+
+
+cdis<-condid_disagree[condid_disagree$Var2=="TRUE",]
+cdi1<-cdis[cdis$Freq==c(1),]
+cdi2<-cdis[cdis$Freq==c(2),]
+
+cdi12<-rbind(cdi1, cdi2)
+
+sp.sums$APLOT<-vol$APLOT[match(sp.sums$BPLOT, vol$BPLOT)]
+sp.sums$errcond<-cdi12$Var2[match(sp.sums$APLOT, cdi$Var1)]
+sp.sums
+
+table(condid_disagree$Var2, condid_disagree$Freq)
+table(sp.sums$errcond)
+
+#write.csv(sp.sums[sp.sums$errcond=="TRUE",], file="condid_disagree.csv")
+for_condstat<-read.csv("condid_mismatch.csv")
+for_condstat$APLOT<-paste(for_condstat$STATECD,  for_condstat$COUNTYCD, for_condstat$PLOT) 
+
+sp.sums$for_condstat<-for_condstat$agree_cond_status[match(sp.sums$APLOT, for_condstat$APLOT)]
+
+
+
+ci<-as.data.frame(table(sp.sums[sp.sums$errcond=="TRUE","State"]))
+ggplot(ci, aes(x=Var1, y=Freq))+geom_bar(stat="identity")+
+  xlab("State")+ylab("Number of subplots")
+
+sum(ci$Freq)
+
+fi<-as.data.frame(table(sp.sums[sp.sums$for_condstat=="forest_cond_status","State"]))
+ggplot(fi, aes(x=Var1, y=Freq))+geom_bar(stat="identity")+
+  xlab("State")+ylab("Number of subplots- forested condition agreement")
+
+####
+
+
+
+###
+
+
+
+# different forest  #disagreed on forest class
+#dif.sums<-sp.sums[sp.sums$sametree!="diff_forest",]
+
+
+# use dif.sums, but now with for_condstat/  7/5/2023
+dif.sums<-sp.sums[sp.sums$for_condstat!="forest_cond_status",]
+head(dif.sums)
+dim(sp.sums)
+dim(dif.sums)
+dim(dis.sums)
+
+table(dif.sums$sametree)
+
+
+
+# as a subset of those plots with forested condidtion == 1. 
+dis.sums<-dif.sums[dif.sums$sametree=="TRUE",]
+
+
+# Below is where you can calculate the 'error' at each larger scale
+
+#2.1 ## subplot level volume error, all subplots
+sp.sums$errvolcsnet<- ((as.numeric(sp.sums$F_VOLCSNET)-as.numeric(sp.sums$Q_VOLCSNET)))
+sp.sums$errbiot<- ((as.numeric(sp.sums$F_DRYBIOT)-as.numeric(sp.sums$Q_DRYBIOT)))
+sp.sums$errBA<- ((as.numeric(sp.sums$F_BA)-as.numeric(sp.sums$Q_BA)))
+
+sp.sums$errabsvolcsnet<- (abs(as.numeric(sp.sums$F_VOLCSNET)-as.numeric(sp.sums$Q_VOLCSNET)))
+sp.sums$errabsbiot<- (abs(as.numeric(sp.sums$F_DRYBIOT)-as.numeric(sp.sums$Q_DRYBIOT)))
+sp.sums$errabsBA<- (abs(as.numeric(sp.sums$F_BA)-as.numeric(sp.sums$Q_BA)))
+
+sp.sums$meancsnet<-rowMeans(sp.sums[c("F_VOLCSNET","Q_VOLCSNET")])
+sp.sums$meanbiot<-rowMeans(sp.sums[c("F_DRYBIOT","Q_DRYBIOT")])
+sp.sums$meanBA<-rowMeans(sp.sums[c("F_BA","Q_BA")])
+
+sp.sums$relcsnet<-sp.sums$errabsvolcsnet/sp.sums$meancsnet
+sp.sums$relbiot<-sp.sums$errabsbiot/sp.sums$meanbiot
+sp.sums$relBA<-sp.sums$errabsBA/sp.sums$meanBA
+
+sp.sums$erractvolcsnet<-(sp.sums$errabsvolcsnet/sp.sums$meancsnet)*100
+sp.sums$erractbiot<-(sp.sums$errabsbiot/sp.sums$meanbiot)*100
+sp.sums$erractBA<-(sp.sums$errabsBA/sp.sums$meanBA)*100
+
+####################################
+
+hist(sp.sums$errabsbiot, breaks=200)
+summary(sp.sums$errabsbiot)
+
+
+
+sort(sp.sums$errabsbiot, decreasing=TRUE)
+
+sort(sp.sums$erractbiot, decreasing=TRUE)
+
+spi <- sp.sums[with(sp.sums,order(-errabsvolcsnet)),]
+
+spi <- spi[1:20,]
+spi
+
+
+
+
+#write.csv(spi, file="top_10_disagreements_VOLCSNET_7_1.csv")
+
+s1<-ggplot(spi, aes(x=State, y=erractbiot, col=typgrp, group=BPLOT, shape=sametree))+geom_point()+
+  facet_wrap(~for_condstat)+ggtitle("Highest disagreement at the subplot level")
+s1
+
+library(plotly)
+ggplotly(s1)
+
+
+###
+
+
+di <- dif.sums[with(dif.sums,order(-errabsvolcsnet)),]
+
+
+
+##############################################
+
+
+#2.2 ## subplot level volume error, only subplots where they agree on tree #s
+dis.sums$errvolcsnet<- ((as.numeric(dis.sums$F_VOLCSNET)-as.numeric(dis.sums$Q_VOLCSNET)))
+dis.sums$errbiot<- ((as.numeric(dis.sums$F_DRYBIOT)-as.numeric(dis.sums$Q_DRYBIOT)))
+dis.sums$errBA<- ((as.numeric(dis.sums$F_BA)-as.numeric(dis.sums$Q_BA)))
+
+dis.sums$errabsvolcsnet<- (abs(as.numeric(dis.sums$F_VOLCSNET)-as.numeric(dis.sums$Q_VOLCSNET)))
+dis.sums$errabsbiot<- (abs(as.numeric(dis.sums$F_DRYBIOT)-as.numeric(dis.sums$Q_DRYBIOT)))
+dis.sums$errabsBA<- (abs(as.numeric(dis.sums$F_BA)-as.numeric(dis.sums$Q_BA)))
+
+dis.sums$meancsnet<-rowMeans(dis.sums[c("F_VOLCSNET","Q_VOLCSNET")])
+dis.sums$meanbiot<-rowMeans(dis.sums[c("F_DRYBIOT","Q_DRYBIOT")])
+dis.sums$meanBA<-rowMeans(dis.sums[c("F_BA","Q_BA")])
+
+dis.sums$relcsnet<-dis.sums$errabsvolcsnet/dis.sums$meancsnet
+dis.sums$relbiot<-dis.sums$errabsbiot/dis.sums$meanbiot
+dis.sums$relBA<-dis.sums$errabsBA/dis.sums$meanBA
+
+dis.sums$erractvolcsnet<-(dis.sums$errabsvolcsnet/dis.sums$meancsnet)*100
+dis.sums$erractbiot<-(dis.sums$errabsbiot/dis.sums$meanbiot)*100
+dis.sums$erractBA<-(dis.sums$errabsBA/dis.sums$meanBA)*100
+
+
+#2.3 ## subplot level volume error, only subplots where they disagree on the forest type
+dif.sums$errvolcsnet<- ((as.numeric(dif.sums$F_VOLCSNET)-as.numeric(dif.sums$Q_VOLCSNET)))
+dif.sums$errbiot<- ((as.numeric(dif.sums$F_DRYBIOT)-as.numeric(dif.sums$Q_DRYBIOT)))
+dif.sums$errBA<- ((as.numeric(dif.sums$F_BA)-as.numeric(dif.sums$Q_BA)))
+
+dif.sums$errabsvolcsnet<- (abs(as.numeric(dif.sums$F_VOLCSNET)-as.numeric(dif.sums$Q_VOLCSNET)))
+dif.sums$errabsbiot<- (abs(as.numeric(dif.sums$F_DRYBIOT)-as.numeric(dif.sums$Q_DRYBIOT)))
+dif.sums$errabsBA<- (abs(as.numeric(dif.sums$F_BA)-as.numeric(dif.sums$Q_BA)))
+
+dif.sums$meancsnet<-rowMeans(dif.sums[c("F_VOLCSNET","Q_VOLCSNET")])
+dif.sums$meanbiot<-rowMeans(dif.sums[c("F_DRYBIOT","Q_DRYBIOT")])
+dif.sums$meanBA<-rowMeans(dif.sums[c("F_BA","Q_BA")])
+
+dif.sums$relcsnet<-dif.sums$errabsvolcsnet/dif.sums$meancsnet
+dif.sums$relbiot<-dif.sums$errabsbiot/dif.sums$meanbiot
+dif.sums$relBA<-dif.sums$errabsBA/dif.sums$meanBA
+
+dif.sums$erractvolcsnet<-(dif.sums$errabsvolcsnet/dif.sums$meancsnet)*100
+dif.sums$erractbiot<-(dif.sums$errabsbiot/dif.sums$meanbiot)*100
+dif.sums$erractBA<-(dif.sums$errabsBA/dif.sums$meanBA)*100
+
+##########
+
+########## stopped here on the ccar drive
+p1<-ggplot(sp.sums, aes(x=Q_BA, y=erractBA, col=typgrp))+geom_point( col="blue")+ggtitle("All subplots n=4838")+ylab("%")+ylim(0,200)
+p2<-ggplot(sp.sums, aes(x=Q_DRYBIOT, y=erractbiot, col=typgrp ))+geom_point( col="dark green")+ggtitle("All subplots n=4838")+ylab("%")
+p3<-ggplot(sp.sums, aes(x=Q_VOLCSNET, y=erractvolcsnet , col=typgrp))+geom_point(col="brown")+ggtitle("All subplots n=4838")+ylab("%")
+
+p4<-ggplot(dif.sums, aes(x=Q_BA, y=erractBA , col=typgrp))+geom_point( col="blue")+ggtitle("Agreed forested cond n=4814")+ylab("%")+ylim(0,200)
+p5<-ggplot(dif.sums, aes(x=Q_DRYBIOT, y=erractbiot , group=BPLOT, col=typgrp))+geom_point(col="dark green")+ggtitle("Agreed forested cond n=4814")+ylab("%")
+p6<-ggplot(dif.sums, aes(x=Q_VOLCSNET, y=erractvolcsnet ))+geom_point(col="brown")+ggtitle("Agreed forested cond n=4814")+ylab("%")
+
+p7<-ggplot(dis.sums, aes(x=Q_BA, y=erractBA ))+geom_point( col="blue")+ggtitle("Agreed on trees n=4520")+ylab("%")
+p8<-ggplot(dis.sums, aes(x=Q_DRYBIOT, y=erractbiot ))+geom_point(col="dark green")+ggtitle("Agreed on trees n=4520")+ylab("%")
+p9<-ggplot(dis.sums, aes(x=Q_VOLCSNET, y=erractvolcsnet ))+geom_point(col="brown")+ggtitle("Agreed on trees n=4520")+ylab("%")
+
+
+ggplotly(p5)
+
+ggarrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, nrow=3, ncol=3)
+
+## Now do the aggregation to get to the forest level
+
+#3.1 ####################  all subplots, at the forest level
+sp.forest<-aggregate(list( F_VOLCSNET=sp.sums$F_VOLCSNET,Q_VOLCSNET=sp.sums$Q_VOLCSNET,
+                          F_DRYBIOT=sp.sums$F_DRYBIOT, Q_DRYBIOT=sp.sums$Q_DRYBIOT,
+                          F_BA=sp.sums$F_BA, Q_BA=sp.sums$Q_BA),
+                     by=list(typgrp=sp.sums$typgrp), FUN= "mean", na.rm=T)
+
+
+
+dim(sp.forest) # 14 forest types!
+
+#3.2 ###################  only subplots where they agree on tree
+dis.forest<-aggregate(list(F_VOLCSNET=dis.sums$F_VOLCSNET,Q_VOLCSNET=dis.sums$Q_VOLCSNET,
+                           F_DRYBIOT=dis.sums$F_DRYBIOT, Q_DRYBIOT=dis.sums$Q_DRYBIOT,
+                           F_BA=dis.sums$F_BA, Q_BA=dis.sums$Q_BA),
+                      by=list(typgrp=dis.sums$typgrp), FUN= "mean", na.rm=T)
+str(dis.forest)
+
+#3.3 ###################  only subplots where they disagree on forest type
+dif.forest<-aggregate(list(F_VOLCSNET=dif.sums$F_VOLCSNET,Q_VOLCSNET=dif.sums$Q_VOLCSNET,
+                           F_DRYBIOT=dif.sums$F_DRYBIOT, Q_DRYBIOT=dif.sums$Q_DRYBIOT,
+                           F_BA=dif.sums$F_BA, Q_BA=dif.sums$Q_BA),
+                      by=list(typgrp=dif.sums$typgrp), FUN= "mean", na.rm=T)
+
+dim(dif.forest)
+
+##########
+
+
+
+
+
+
+
+#3.1a- ###########  calculate the errors
+#forest type but all subplots
+sp.forest$errvolcsnet<- ((as.numeric(sp.forest$F_VOLCSNET)-as.numeric(sp.forest$Q_VOLCSNET)))
+sp.forest$errbiot<- ((as.numeric(sp.forest$F_DRYBIOT)-as.numeric(sp.forest$Q_DRYBIOT)))
+sp.forest$errBA<- ((as.numeric(sp.forest$F_BA)-as.numeric(sp.forest$Q_BA)))
+
+sp.forest$errabsvolcsnet<- (abs(as.numeric(sp.forest$F_VOLCSNET)-as.numeric(sp.forest$Q_VOLCSNET)))
+sp.forest$errabsbiot<- (abs(as.numeric(sp.forest$F_DRYBIOT)-as.numeric(sp.forest$Q_DRYBIOT)))
+sp.forest$errabsBA<- (abs(as.numeric(sp.forest$F_BA)-as.numeric(sp.forest$Q_BA)))
+
+sp.forest$meancsnet<-rowMeans(sp.forest[c("F_VOLCSNET","Q_VOLCSNET")])
+sp.forest$meanbiot<-rowMeans(sp.forest[c("F_DRYBIOT","Q_DRYBIOT")])
+sp.forest$meanBA<-rowMeans(sp.forest[c("F_BA","Q_BA")])
+
+sp.forest$relcsnet<-sp.forest$errabsvolcsnet/sp.forest$meancsnet
+sp.forest$relbiot<-sp.forest$errabsbiot/sp.forest$meanbiot
+sp.forest$relBA<-sp.forest$errabsBA/sp.forest$meanBA
+
+sp.forest$erractvolcsnet<-(sp.forest$errabsvolcsnet/sp.forest$meancsnet)*100
+sp.forest$erractbiot<-(sp.forest$errabsbiot/sp.forest$meanbiot)*100
+sp.forest$erractBA<-(sp.forest$errabsBA/sp.forest$meanBA)*100
+
+#3.2a- ###########  calculate the errors
+# forest type but only when they agree on the trees
+dis.forest$errvolcsnet<- ((as.numeric(dis.forest$F_VOLCSNET)-as.numeric(dis.forest$Q_VOLCSNET)))
+dis.forest$errbiot<- ((as.numeric(dis.forest$F_DRYBIOT)-as.numeric(dis.forest$Q_DRYBIOT)))
+dis.forest$errBA<- ((as.numeric(dis.forest$F_BA)-as.numeric(dis.forest$Q_BA)))
+
+dis.forest$errabsvolcsnet<- (abs(as.numeric(dis.forest$F_VOLCSNET)-as.numeric(dis.forest$Q_VOLCSNET)))
+dis.forest$errabsbiot<- (abs(as.numeric(dis.forest$F_DRYBIOT)-as.numeric(dis.forest$Q_DRYBIOT)))
+dis.forest$errabsBA<- (abs(as.numeric(dis.forest$F_BA)-as.numeric(dis.forest$Q_BA)))
+
+dis.forest$meancsnet<-rowMeans(dis.forest[c("F_VOLCSNET","Q_VOLCSNET")])
+dis.forest$meanbiot<-rowMeans(dis.forest[c("F_DRYBIOT","Q_DRYBIOT")])
+dis.forest$meanBA<-rowMeans(dis.forest[c("F_BA","Q_BA")])
+
+dis.forest$relcsnet<-dis.forest$errabsvolcsnet/dis.forest$meancsnet
+dis.forest$relbiot<-dis.forest$errabsbiot/dis.forest$meanbiot
+dis.forest$relBA<-dis.forest$errabsBA/dis.forest$meanBA
+
+dis.forest$erractvolcsnet<-(dis.forest$errabsvolcsnet/dis.forest$meancsnet)*100
+dis.forest$erractbiot<-(dis.forest$errabsbiot/dis.forest$meanbiot)*100
+dis.forest$erractBA<-(dis.forest$errabsBA/dis.forest$meanBA)*100
+
+#3.3a- ###########  calculate the errors
+# forest type but only when they disagree on forest type
+dif.forest$errvolcsnet<- ((as.numeric(dif.forest$F_VOLCSNET)-as.numeric(dif.forest$Q_VOLCSNET)))
+dif.forest$errbiot<- ((as.numeric(dif.forest$F_DRYBIOT)-as.numeric(dif.forest$Q_DRYBIOT)))
+dif.forest$errBA<- ((as.numeric(dif.forest$F_BA)-as.numeric(dif.forest$Q_BA)))
+
+dif.forest$errabsvolcsnet<- (abs(as.numeric(dif.forest$F_VOLCSNET)-as.numeric(dif.forest$Q_VOLCSNET)))
+dif.forest$errabsbiot<- (abs(as.numeric(dif.forest$F_DRYBIOT)-as.numeric(dif.forest$Q_DRYBIOT)))
+dif.forest$errabsBA<- (abs(as.numeric(dif.forest$F_BA)-as.numeric(dif.forest$Q_BA)))
+
+dif.forest$meancsnet<-rowMeans(dif.forest[c("F_VOLCSNET","Q_VOLCSNET")])
+dif.forest$meanbiot<-rowMeans(dif.forest[c("F_DRYBIOT","Q_DRYBIOT")])
+dif.forest$meanBA<-rowMeans(dif.forest[c("F_BA","Q_BA")])
+
+dif.forest$relcsnet<-dif.forest$errabsvolcsnet/dif.forest$meancsnet
+dif.forest$relbiot<-dif.forest$errabsbiot/dif.forest$meanbiot
+dif.forest$relBA<-dif.forest$errabsBA/dif.forest$meanBA
+
+dif.forest$erractvolcsnet<-(dif.forest$errabsvolcsnet/dif.forest$meancsnet)*100
+dif.forest$erractbiot<-(dif.forest$errabsbiot/dif.forest$meanbiot)*100
+dif.forest$erractBA<-(dif.forest$errabsBA/dif.forest$meanBA)*100
+
+
+###
+
+## Now do the aggregation to get to the state! level
+
+dim(sp.sums)
+
+#4.1 ####################  all subplots, at the forest level
+sp.state<-aggregate(list(F_VOLCSNET=sp.sums$F_VOLCSNET,Q_VOLCSNET=sp.sums$Q_VOLCSNET,
+                           F_DRYBIOT=sp.sums$F_DRYBIOT, Q_DRYBIOT=sp.sums$Q_DRYBIOT,
+                           F_BA=sp.sums$F_BA, Q_BA=sp.sums$Q_BA),
+                     by=list(State=sp.sums$State), FUN= "mean", na.rm=T)
+
+head(sp.state)
+
+sta<-as.data.frame(table(sp.sums$State ))
+sp.state$Freq<-sta$Freq[match(sp.state$State, sta$Var1)]
+
+#4.2 ###################  only subplots where they agree on tree
+dis.state<-aggregate(list(
+                     F_VOLCSNET=dis.sums$F_VOLCSNET,Q_VOLCSNET=dis.sums$Q_VOLCSNET,
+                     F_DRYBIOT=dis.sums$F_DRYBIOT, Q_DRYBIOT=dis.sums$Q_DRYBIOT,
+                     F_BA=dis.sums$F_BA, Q_BA=dis.sums$Q_BA),
+by=list(State=dis.sums$State), FUN= "mean", na.rm=T)
+  
+str(dis.state)
+
+#4.3 ###################  only subplots where they disagree on forest type
+dif.state<-aggregate(list(  errvolcsnet=dif.sums$errvolcsnet, errabsvolcsnet=dif.sums$errabsvolcsnet, erractvolcsnet=dif.sums$erractvolcsnet,
+                            errbiot=dif.sums$errbiot, errabsbiot=dif.sums$errabsbiot, erractbiot=dif.sums$erractbiot,
+                            errBA=dif.sums$errBA, errabsBA=dif.sums$errabsBA, erractBA=dif.sums$erractBA,
+                            F_VOLCSNET=dif.sums$F_VOLCSNET,Q_VOLCSNET=dif.sums$Q_VOLCSNET,
+                            F_DRYBIOT=dif.sums$F_DRYBIOT, Q_DRYBIOT=dif.sums$Q_DRYBIOT,
+                            F_BA=dif.sums$F_BA, Q_BA=dif.sums$Q_BA),
+                     by=list(State=dif.sums$State), FUN= "mean", na.rm=T)
+
+# #4.1a- ###########  calculate the errors
+# state type but all subplots
+sp.state$errvolcsnet<- ((as.numeric(sp.state$F_VOLCSNET)-as.numeric(sp.state$Q_VOLCSNET)))
+sp.state$errbiot<- ((as.numeric(sp.state$F_DRYBIOT)-as.numeric(sp.state$Q_DRYBIOT)))
+sp.state$errBA<- ((as.numeric(sp.state$F_BA)-as.numeric(sp.state$Q_BA)))
+
+sp.state$errabsvolcsnet<- (abs(as.numeric(sp.state$F_VOLCSNET)-as.numeric(sp.state$Q_VOLCSNET)))
+sp.state$errabsbiot<- (abs(as.numeric(sp.state$F_DRYBIOT)-as.numeric(sp.state$Q_DRYBIOT)))
+sp.state$errabsBA<- (abs(as.numeric(sp.state$F_BA)-as.numeric(sp.state$Q_BA)))
+
+sp.state$meancsnet<-rowMeans(sp.state[c("F_VOLCSNET","Q_VOLCSNET")])
+sp.state$meanbiot<-rowMeans(sp.state[c("F_DRYBIOT","Q_DRYBIOT")])
+sp.state$meanBA<-rowMeans(sp.state[c("F_BA","Q_BA")])
+
+sp.state$relcsnet<-sp.state$errabsvolcsnet/sp.state$meancsnet
+sp.state$relbiot<-sp.state$errabsbiot/sp.state$meanbiot
+sp.state$relBA<-sp.state$errabsBA/sp.state$meanBA
+
+sp.state$erractvolcsnet<-(sp.state$errabsvolcsnet/sp.state$meancsnet)*100
+sp.state$erractbiot<-(sp.state$errabsbiot/sp.state$meanbiot)*100
+sp.state$erractBA<-(sp.state$errabsBA/sp.state$meanBA)*100
+
+#4.2a- ###########  calculate the errors
+# state type but only when they agree on the trees
+dis.state$errvolcsnet<- ((as.numeric(dis.state$F_VOLCSNET)-as.numeric(dis.state$Q_VOLCSNET)))
+dis.state$errbiot<- ((as.numeric(dis.state$F_DRYBIOT)-as.numeric(dis.state$Q_DRYBIOT)))
+dis.state$errBA<- ((as.numeric(dis.state$F_BA)-as.numeric(dis.state$Q_BA)))
+
+dis.state$errabsvolcsnet<- (abs(as.numeric(dis.state$F_VOLCSNET)-as.numeric(dis.state$Q_VOLCSNET)))
+dis.state$errabsbiot<- (abs(as.numeric(dis.state$F_DRYBIOT)-as.numeric(dis.state$Q_DRYBIOT)))
+dis.state$errabsBA<- (abs(as.numeric(dis.state$F_BA)-as.numeric(dis.state$Q_BA)))
+
+dis.state$meancsnet<-rowMeans(dis.state[c("F_VOLCSNET","Q_VOLCSNET")])
+dis.state$meanbiot<-rowMeans(dis.state[c("F_DRYBIOT","Q_DRYBIOT")])
+dis.state$meanBA<-rowMeans(dis.state[c("F_BA","Q_BA")])
+
+dis.state$relcsnet<-dis.state$errabsvolcsnet/dis.state$meancsnet
+dis.state$relbiot<-dis.state$errabsbiot/dis.state$meanbiot
+dis.state$relBA<-dis.state$errabsBA/dis.state$meanBA
+
+dis.state$erractvolcsnet<-(dis.state$errabsvolcsnet/dis.state$meancsnet)*100
+dis.state$erractbiot<-(dis.state$errabsbiot/dis.state$meanbiot)*100
+dis.state$erractBA<-(dis.state$errabsBA/dis.state$meanBA)*100
+
+#4.3a- ###########  calculate the errors
+# state type but only when they disagree on forest type
+dif.state$errvolcsnet<- ((as.numeric(dif.state$F_VOLCSNET)-as.numeric(dif.state$Q_VOLCSNET)))
+dif.state$errbiot<- ((as.numeric(dif.state$F_DRYBIOT)-as.numeric(dif.state$Q_DRYBIOT)))
+dif.state$errBA<- ((as.numeric(dif.state$F_BA)-as.numeric(dif.state$Q_BA)))
+
+dif.state$errabsvolcsnet<- (abs(as.numeric(dif.state$F_VOLCSNET)-as.numeric(dif.state$Q_VOLCSNET)))
+dif.state$errabsbiot<- (abs(as.numeric(dif.state$F_DRYBIOT)-as.numeric(dif.state$Q_DRYBIOT)))
+dif.state$errabsBA<- (abs(as.numeric(dif.state$F_BA)-as.numeric(dif.state$Q_BA)))
+
+dif.state$meancsnet<-rowMeans(dif.state[c("F_VOLCSNET","Q_VOLCSNET")])
+dif.state$meanbiot<-rowMeans(dif.state[c("F_DRYBIOT","Q_DRYBIOT")])
+dif.state$meanBA<-rowMeans(dif.state[c("F_BA","Q_BA")])
+
+dif.state$relcsnet<-dif.state$errabsvolcsnet/dif.state$meancsnet
+dif.state$relbiot<-dif.state$errabsbiot/dif.state$meanbiot
+dif.state$relBA<-dif.state$errabsBA/dif.state$meanBA
+
+dif.state$erractvolcsnet<-(dif.state$errabsvolcsnet/dif.state$meancsnet)*100
+dif.state$erractbiot<-(dif.state$errabsbiot/dif.state$meanbiot)*100
+dif.state$erractBA<-(dif.state$errabsBA/dif.state$meanBA)*100
+
+library(ggplot2)
+
+
+
+
+####### view state level and forest level
+p1<-ggplot(sp.forest, aes(x=typgrp, y=erractBA))+geom_point( col="blue")+ggtitle("All subplots n=4838")+ylab("%")+ylim(0,200)
+p2<-ggplot(sp.forest, aes(x=typgrp, y=erractbiot ))+geom_point( col="dark green")+ggtitle("All subplots n=4838")+ylab("%")
+p3<-ggplot(sp.forest, aes(x=typgrp, y=erractvolcsnet ))+geom_point(col="brown")+ggtitle("All subplots n=4838")+ylab("%")
+
+p4<-ggplot(dif.forest, aes(x=typgrp, y=erractBA ))+geom_point( col="blue")+ggtitle("Agreed forested cond n=4814")+ylab("%")+ylim(0,200)
+p5<-ggplot(dif.forest, aes(x=typgrp, y=erractbiot ))+geom_point(col="dark green")+ggtitle("Agreed forested cond n=4814")+ylab("%")
+p6<-ggplot(dif.forest, aes(x=typgrp, y=erractvolcsnet ))+geom_point(col="brown")+ggtitle("Agreed forested cond n=4814")+ylab("%")
+
+
+ggarrange(p1, p2, p3, p4, p5, p6)
+
+
+
+
+# ## quick graphs for states
+# s1<-ggplot(sp.state,aes( x=Freq, y=erractBA))+xlab("Number of subplots")+
+#   geom_text(aes(label=State))+ylab("Basal area disagreement (%)")+theme_classic()+
+#   ylim(0,2)
+# 
+# s2<-ggplot(sp.state,aes( x=Freq, y=erractbiot))+xlab("Number of subplots")+
+#   geom_text(aes(label=State))+ylab("Biomass disagreement (%)")+theme_classic()+ylim(0,10)
+# s3<-ggplot(sp.state,aes( x=Freq, y=erractvolcsnet))+xlab("Number of subplots")+
+#   geom_text(aes(label=State))+ylab("Saw-log volume disagreement (%)")+theme_classic()+ylim(0,10)
+# library(ggpubr)
+# ggarrange(s1, s2, s3, nrow=1)
+# 
+# 
+# #write.csv(sp.state, file="subplots per state paired FCQA.csv")
+# sta
+# 
+# 
+# ggplot(sta, aes(x=reorder(Var1, Freq), y=Freq))+geom_bar(stat="identity")+
+#   scale_y_continuous(breaks = round(seq(0, max(sta$Freq), by = 50),))+
+#   ylab("Number of subplots")+xlab("24 states in NRS")
+
+
+###############################
+
+# Making of tables.
+
+###############################
+
+
+
+tree.volume<-c("Individual tree volume (m3)",
+               median(vol$Q_VOLCSNET_m3, na.rm=T),
+               IQR(vol$Q_VOLCSNET_m3, na.rm=T),
+               as.numeric(sd(vol$errtreevol, na.rm=T)),
+               as.numeric(length(na.omit(vol$errtreevol))),
+               as.numeric(mean((vol$errtreevol), na.rm=T)),
+               as.numeric(mean(vol$errabstreevol, na.rm=T)),
+               as.numeric(mean(vol$erracttreevol, na.rm=T)),
+               as.numeric(quantile(vol$errabstreevol , 0.25, na.rm=T)),
+               as.numeric(quantile(vol$errabstreevol, 0.50, na.rm=T)),
+               as.numeric(quantile(vol$errabstreevol, 0.75, na.rm=T)),
+               as.numeric(quantile(vol$errabstreevol, 0.95, na.rm=T)))
+tree.volume
+
+
+tree.biomass<-c("Individual tree biomass (Mg)",
+                median(vol$Q_DRYBIOT_KG, na.rm=T),
+                IQR(vol$Q_DRYBIOT_KG, na.rm=T),
+                as.numeric(sd(vol$errtreebiot, na.rm=T)),
+                as.numeric(length(na.omit(vol$errtreebiot))),
+                as.numeric(mean((vol$errtreebiot), na.rm=T)),
+                as.numeric(mean(vol$errabstreebiot, na.rm=T)),
+                as.numeric(mean(vol$erracttreebiot, na.rm=T)),
+                as.numeric(quantile(vol$errabstreebiot , 0.25, na.rm=T)),
+                as.numeric(quantile(vol$errabstreebiot, 0.50, na.rm=T)),
+                as.numeric(quantile(vol$errabstreebiot, 0.75, na.rm=T)),
+                as.numeric(quantile(vol$errabstreebiot, 0.95, na.rm=T)))
+       
+tree.biomass
+summary(vol$errabstreebiot)
+length(tree.biomass)
+
+tree.BA<-c("Individual tree basal area (cm2)",
+           median(vol$Q_BA_cm2, na.rm=T),
+           IQR(vol$Q_BA_cm2, na.rm=T),
+           as.numeric(sd(vol$errtreeBA, na.rm=T)),
+           as.numeric(length(na.omit(vol$errtreeBA))),
+           as.numeric(mean((vol$errtreeBA), na.rm=T)),
+           as.numeric(mean(vol$errabstreeBA, na.rm=T)),
+           as.numeric(mean(vol$erracttreeBA, na.rm=T)),
+           as.numeric(quantile(vol$errabstreeBA , 0.25, na.rm=T)),
+           as.numeric(quantile(vol$errabstreeBA, 0.50, na.rm=T)),
+           as.numeric(quantile(vol$errabstreeBA, 0.75, na.rm=T)),
+           as.numeric(quantile(vol$errabstreeBA, 0.95, na.rm=T)))
+           
+           tree.BA
+#############################################
+
+#### Subplot-level volume error
+
+# 30.1 ################################
+# sp.sums
+sp.volume<-c("All subplots volume (m3/ha)",
+             median(sp.sums$Q_VOLCSNET, na.rm=T),
+             IQR(sp.sums$Q_VOLCSNET, na.rm=T),
+             as.numeric(sd(sp.sums$errvolcsnet, na.rm=T)),
+             as.numeric(length(na.omit(sp.sums$errvolcsnet))),
+             as.numeric(mean(sp.sums$errvolcsnet, na.rm=T)),
+             as.numeric(mean(sp.sums$errabsvolcsnet, na.rm=T)),
+             as.numeric(mean(sp.sums$erractvolcsnet, na.rm=T)),
+             as.numeric(quantile(sp.sums$errabsvolcsnet, 0.25, na.rm=T)),
+             as.numeric(quantile(sp.sums$errabsvolcsnet, 0.50, na.rm=T)),
+             as.numeric(quantile(sp.sums$errabsvolcsnet, 0.75, na.rm=T)),
+             as.numeric(quantile(sp.sums$errabsvolcsnet, 0.95, na.rm=T)))
+length(sp.volume)
+
+sp.biomass<-c("All subplots biomass (Mg/ha)",
+              median(sp.sums$Q_DRYBIOT, na.rm=T),
+              IQR(sp.sums$Q_DRYBIOT, na.rm=T),
+              as.numeric(sd(sp.sums$errbiot, na.rm=T)),
+              as.numeric(length(na.omit(sp.sums$errbiot))),
+              as.numeric(mean(sp.sums$errbiot, na.rm=T)),
+              as.numeric(mean(sp.sums$errabsbiot, na.rm=T)),
+              as.numeric(mean(sp.sums$erractbiot, na.rm=T)),
+              as.numeric(quantile(sp.sums$errabsbiot, 0.25, na.rm=T)),
+              as.numeric(quantile(sp.sums$errabsbiot, 0.50, na.rm=T)),
+              as.numeric(quantile(sp.sums$errabsbiot, 0.75, na.rm=T)),
+              as.numeric(quantile(sp.sums$errabsbiot, 0.95, na.rm=T)))
+length(sp.biomass)
+sp.biomass
+
+sp.BA<-c("All subplots (m2/ha) ",
+         median(sp.sums$Q_BA, na.rm=T),
+         IQR(sp.sums$Q_BA, na.rm=T),
+         as.numeric(sd(sp.sums$errBA, na.rm=T)),
+          as.numeric(length(na.omit(sp.sums$errBA))),
+         as.numeric(mean(sp.sums$errBA, na.rm=T)),
+         as.numeric(mean(sp.sums$errabsBA, na.rm=T)),
+         as.numeric(mean(sp.sums$erractBA, na.rm=T)),
+         as.numeric(quantile(sp.sums$errabsBA, 0.25, na.rm=T)),
+         as.numeric(quantile(sp.sums$errabsBA, 0.50, na.rm=T)),
+         as.numeric(quantile(sp.sums$errabsBA, 0.75, na.rm=T)),
+         as.numeric(quantile(sp.sums$errabsBA, 0.95, na.rm=T)))
+length(sp.BA)
+sp.BA
+
+# 30.2 ################################
+#  dis.sums
+dis.volume<-c("Tree agreement volume",
+             median(dis.sums$Q_VOLCSNET, na.rm=T),
+             IQR(dis.sums$Q_VOLCSNET, na.rm=T),
+             sd(dis.sums$errvolcsnet, na.rm=T),
+             as.numeric(length(na.omit(dis.sums$errvolcsnet))),
+             as.numeric(mean(dis.sums$errvolcsnet, na.rm=T)),
+             as.numeric(mean(dis.sums$errabsvolcsnet, na.rm=T)),
+             as.numeric(mean(dis.sums$erractvolcsnet, na.rm=T)),
+             as.numeric(quantile(dis.sums$errabsvolcsnet, 0.25, na.rm=T)),
+             as.numeric(quantile(dis.sums$errabsvolcsnet, 0.50, na.rm=T)),
+             as.numeric(quantile(dis.sums$errabsvolcsnet, 0.75, na.rm=T)),
+             as.numeric(quantile(dis.sums$errabsvolcsnet, 0.95, na.rm=T)))
+dis.volume
+length(dis.volume)
+
+dis.biomass<-c("Tree agreement biomass",
+              median(dis.sums$Q_DRYBIOT, na.rm=T),
+              IQR(dis.sums$Q_DRYBIOT, na.rm=T),
+              sd(dis.sums$errbiot, na.rm=T),
+              as.numeric(length(na.omit(dis.sums$errbiot))),
+              as.numeric(mean(dis.sums$errbiot, na.rm=T)),
+              as.numeric(mean(dis.sums$errabsbiot, na.rm=T)),
+              as.numeric(mean(dis.sums$erractbiot, na.rm=T)),
+              as.numeric(quantile(dis.sums$errabsbiot, 0.25, na.rm=T)),
+              as.numeric(quantile(dis.sums$errabsbiot, 0.50, na.rm=T)),
+              as.numeric(quantile(dis.sums$errabsbiot, 0.75, na.rm=T)),
+              as.numeric(quantile(dis.sums$errabsbiot, 0.95, na.rm=T)))
+length(dis.biomass)
+
+dis.BA<-c("Tree agreement basal area",
+         median(dis.sums$Q_BA, na.rm=T),
+         IQR(dis.sums$Q_BA, na.rm=T),
+         sd(dis.sums$errBA, na.rm=T),
+         as.numeric(length(na.omit(dis.sums$errBA))),
+         as.numeric(mean(dis.sums$errBA, na.rm=T)),
+         as.numeric(mean(dis.sums$errabsBA, na.rm=T)),
+         as.numeric(mean(dis.sums$erractBA, na.rm=T)),
+         as.numeric(quantile(dis.sums$errabsBA, 0.25, na.rm=T)),
+         as.numeric(quantile(dis.sums$errabsBA, 0.50, na.rm=T)),
+         as.numeric(quantile(dis.sums$errabsBA, 0.75, na.rm=T)),
+         as.numeric(quantile(dis.sums$errabsBA, 0.95, na.rm=T)))
+length(dis.BA)
+
+# 30.3 ################################
+# dif.sums
+dif.volume<-c("Agree forested volume",
+             median(dif.sums$Q_VOLCSNET, na.rm=T),
+             IQR(dif.sums$Q_VOLCSNET, na.rm=T),
+             sd(dif.sums$errvolcsnet, na.rm=T),
+             as.numeric(length(na.omit(dif.sums$errvolcsnet))),
+             as.numeric(mean(dif.sums$errvolcsnet, na.rm=T)),
+             as.numeric(mean(dif.sums$errabsvolcsnet, na.rm=T)),
+             as.numeric(mean(dif.sums$erractvolcsnet, na.rm=T)),
+             as.numeric(quantile(dif.sums$errabsvolcsnet, 0.25, na.rm=T)),
+             as.numeric(quantile(dif.sums$errabsvolcsnet, 0.50, na.rm=T)),
+             as.numeric(quantile(dif.sums$errabsvolcsnet, 0.75, na.rm=T)),
+             as.numeric(quantile(dif.sums$errabsvolcsnet, 0.95, na.rm=T)))
+dif.volume
+
+
+as.numeric(length(na.omit(dif.sums$errvolcsnet)))
+
+dif.biomass<-c("Agree forested biomass",
+              median(dif.sums$Q_DRYBIOT, na.rm=T),
+              IQR(dif.sums$Q_DRYBIOT, na.rm=T),
+              sd(dif.sums$errbiot, na.rm=T),
+              as.numeric(length(na.omit(dif.sums$errbiot))),
+              as.numeric(mean(dif.sums$errbiot, na.rm=T)),
+              as.numeric(mean(dif.sums$errabsbiot, na.rm=T)),
+              as.numeric(mean(dif.sums$erractbiot, na.rm=T)),
+              as.numeric(quantile(dif.sums$errabsbiot, 0.25, na.rm=T)),
+              as.numeric(quantile(dif.sums$errabsbiot, 0.50, na.rm=T)),
+              as.numeric(quantile(dif.sums$errabsbiot, 0.75, na.rm=T)),
+              as.numeric(quantile(dif.sums$errabsbiot, 0.95, na.rm=T)))
+
+dif.BA<-c("Agree forested basal area",
+         median(dif.sums$Q_BA, na.rm=T),
+         IQR(dif.sums$Q_BA, na.rm=T),
+         sd(dif.sums$errBA, na.rm=T),
+         as.numeric(length(na.omit(dif.sums$errBA))),
+         as.numeric(mean(dif.sums$errBA, na.rm=T)),
+         as.numeric(mean(dif.sums$errabsBA, na.rm=T)),
+         as.numeric(mean(dif.sums$erractBA, na.rm=T)),
+         as.numeric(quantile(dif.sums$errabsBA, 0.25, na.rm=T)),
+         as.numeric(quantile(dif.sums$errabsBA, 0.50, na.rm=T)),
+         as.numeric(quantile(dif.sums$errabsBA, 0.75, na.rm=T)),
+         as.numeric(quantile(dif.sums$errabsBA, 0.95, na.rm=T)))
+dif.BA
+#########################################
+
+
+####  Forest type
+
+
+#############################################
+
+#### Subplot-level volume error at the forest type level
+
+# 40.1 ################################
+# sp.forest
+sp.forest.volume<-c("Forest level all subplots volume",
+             median(sp.forest$Q_VOLCSNET, na.rm=T),
+             IQR(sp.forest$Q_VOLCSNET, na.rm=T),
+             sd(sp.forest$errvolcsnet, na.rm=T),
+             as.numeric(length(na.omit(sp.forest$errvolcsnet))),
+             as.numeric(mean(sp.forest$errvolcsnet, na.rm=T)),
+             as.numeric(mean(sp.forest$errabsvolcsnet, na.rm=T)),
+             as.numeric(mean(sp.forest$erractvolcsnet, na.rm=T)),
+             as.numeric(quantile(sp.forest$errabsvolcsnet, 0.25, na.rm=T)),
+             as.numeric(quantile(sp.forest$errabsvolcsnet, 0.50, na.rm=T)),
+             as.numeric(quantile(sp.forest$errabsvolcsnet, 0.75, na.rm=T)),
+             as.numeric(quantile(sp.forest$errabsvolcsnet, 0.95, na.rm=T)))
+sp.forest.volume
+
+sp.forest.biomass<-c("Forest level all subplots biomass",
+              median(sp.forest$Q_DRYBIOT, na.rm=T),
+              IQR(sp.forest$Q_DRYBIOT, na.rm=T),
+              sd(sp.forest$errbiot, na.rm=T),    
+              as.numeric(length(na.omit(sp.forest$errbiot))),
+              as.numeric(mean(sp.forest$errbiot, na.rm=T)),
+              as.numeric(mean(sp.forest$errabsbiot, na.rm=T)),
+              as.numeric(mean(sp.forest$erractbiot, na.rm=T)),
+              as.numeric(quantile(sp.forest$errabsbiot, 0.25, na.rm=T)),
+              as.numeric(quantile(sp.forest$errabsbiot, 0.50, na.rm=T)),
+              as.numeric(quantile(sp.forest$errabsbiot, 0.75, na.rm=T)),
+              as.numeric(quantile(sp.forest$errabsbiot, 0.95, na.rm=T)))
+
+sp.forest.BA<-c("Forest level all subplots basal area",
+         median(sp.forest$Q_BA, na.rm=T),
+         IQR(sp.forest$Q_BA, na.rm=T),
+         sd(sp.forest$errBA, na.rm=T),
+         as.numeric(length(na.omit(sp.forest$errBA))),
+         as.numeric(mean(sp.forest$errBA, na.rm=T)),
+         as.numeric(mean(sp.forest$errabsBA, na.rm=T)),
+         as.numeric(mean(sp.forest$erractBA, na.rm=T)),
+         as.numeric(quantile(sp.forest$errabsBA, 0.25, na.rm=T)),
+         as.numeric(quantile(sp.forest$errabsBA, 0.50, na.rm=T)),
+         as.numeric(quantile(sp.forest$errabsBA, 0.75, na.rm=T)),
+         as.numeric(quantile(sp.forest$errabsBA, 0.95, na.rm=T)))
+sp.forest.BA
+
+# 40.2 ################################
+#  dis.forest
+dis.forest.volume<-c("Forest level tree agreement volume",
+              median(dis.forest$Q_VOLCSNET, na.rm=T),
+              IQR(dis.forest$Q_VOLCSNET, na.rm=T),
+              sd(dis.forest$errvolcsnet, na.rm=T),
+              as.numeric(length(na.omit(dis.forest$errvolcsnet))),
+              as.numeric(mean(dis.forest$errvolcsnet, na.rm=T)),
+              as.numeric(mean(dis.forest$errabsvolcsnet, na.rm=T)),
+              as.numeric(mean(dis.forest$erractvolcsnet, na.rm=T)),
+              as.numeric(quantile(dis.forest$errabsvolcsnet, 0.25, na.rm=T)),
+              as.numeric(quantile(dis.forest$errabsvolcsnet, 0.50, na.rm=T)),
+              as.numeric(quantile(dis.forest$errabsvolcsnet, 0.75, na.rm=T)),
+              as.numeric(quantile(dis.forest$errabsvolcsnet, 0.95, na.rm=T)))
+dis.forest.volume
+
+dis.forest.biomass<-c("Forest level tree agreement biomass",
+               median(dis.forest$Q_DRYBIOT, na.rm=T),
+               IQR(dis.forest$Q_DRYBIOT, na.rm=T),
+               sd(dis.forest$errbiot, na.rm=T),
+               as.numeric(length(na.omit(dis.forest$errbiot))),
+               as.numeric(mean(dis.forest$errbiot, na.rm=T)),
+               as.numeric(mean(dis.forest$errabsbiot, na.rm=T)),
+               as.numeric(mean(dis.forest$erractbiot, na.rm=T)),
+               as.numeric(quantile(dis.forest$errabsbiot, 0.25, na.rm=T)),
+               as.numeric(quantile(dis.forest$errabsbiot, 0.50, na.rm=T)),
+               as.numeric(quantile(dis.forest$errabsbiot, 0.75, na.rm=T)),
+               as.numeric(quantile(dis.forest$errabsbiot, 0.95, na.rm=T)))
+
+dis.forest.BA<-c("Forest level tree agreement basal area",
+          median(dis.forest$Q_BA, na.rm=T),
+          IQR(dis.forest$Q_BA, na.rm=T),
+          sd(dis.forest$errBA, na.rm=T),
+          as.numeric(length(na.omit(dis.forest$errBA))),
+          as.numeric(mean(dis.forest$errBA, na.rm=T)),
+          as.numeric(mean(dis.forest$errabsBA, na.rm=T)),
+          as.numeric(mean(dis.forest$erractBA, na.rm=T)),
+          as.numeric(quantile(dis.forest$errabsBA, 0.25, na.rm=T)),
+          as.numeric(quantile(dis.forest$errabsBA, 0.50, na.rm=T)),
+          as.numeric(quantile(dis.forest$errabsBA, 0.75, na.rm=T)),
+          as.numeric(quantile(dis.forest$errabsBA, 0.95, na.rm=T)))
+
+# 40.3 ################################
+# dif.forest
+dif.forest.volume<-c("Forest level disagree forested volume",
+              median(dif.forest$Q_VOLCSNET, na.rm=T),
+              IQR(dif.forest$Q_VOLCSNET, na.rm=T),
+              sd(dif.forest$errvolcsnet, na.rm=T),
+              as.numeric(length(na.omit(dif.forest$errvolcsnet))),
+              as.numeric(mean(dif.forest$errvolcsnet, na.rm=T)),
+              as.numeric(mean(dif.forest$errabsvolcsnet, na.rm=T)),
+              as.numeric(mean(dif.forest$erractvolcsnet, na.rm=T)),
+              as.numeric(quantile(dif.forest$errabsvolcsnet, 0.25, na.rm=T)),
+              as.numeric(quantile(dif.forest$errabsvolcsnet, 0.50, na.rm=T)),
+              as.numeric(quantile(dif.forest$errabsvolcsnet, 0.75, na.rm=T)),
+              as.numeric(quantile(dif.forest$errabsvolcsnet, 0.95, na.rm=T)))
+dif.forest.volume
+
+dif.forest.biomass<-c("Forest level disagree forested biomass",
+               median(dif.forest$Q_DRYBIOT, na.rm=T),
+               IQR(dif.forest$Q_DRYBIOT, na.rm=T),
+               sd(dif.forest$errbiot, na.rm=T),
+               as.numeric(length(na.omit(dif.forest$errbiot))),
+               as.numeric(mean(dif.forest$errbiot, na.rm=T)),
+               as.numeric(mean(dif.forest$errabsbiot, na.rm=T)),
+               as.numeric(mean(dif.forest$erractbiot, na.rm=T)),
+               as.numeric(quantile(dif.forest$errabsbiot, 0.25, na.rm=T)),
+               as.numeric(quantile(dif.forest$errabsbiot, 0.50, na.rm=T)),
+               as.numeric(quantile(dif.forest$errabsbiot, 0.75, na.rm=T)),
+               as.numeric(quantile(dif.forest$errabsbiot, 0.95, na.rm=T)))
+
+dif.forest.BA<-c("Forest level disagree forested basal area",
+          median(dif.forest$Q_BA, na.rm=T),
+          IQR(dif.forest$Q_BA, na.rm=T),
+          sd(dif.forest$errBA, na.rm=T),
+          as.numeric(length(na.omit(dif.forest$errBA))),
+          as.numeric(mean(dif.forest$errBA, na.rm=T)),
+          as.numeric(mean(dif.forest$errabsBA, na.rm=T)),
+          as.numeric(mean(dif.forest$erractBA, na.rm=T)),
+          as.numeric(quantile(dif.forest$errabsBA, 0.25, na.rm=T)),
+          as.numeric(quantile(dif.forest$errabsBA, 0.50, na.rm=T)),
+          as.numeric(quantile(dif.forest$errabsBA, 0.75, na.rm=T)),
+          as.numeric(quantile(dif.forest$errabsBA, 0.95, na.rm=T)))
+
+
+
+
+#########################################
+
+
+####  STATE type
+
+#############################################
+
+#### Subplot-level volume error at the forest type level
+
+# 50.1 ################################
+# sp.state
+names(sp.state)
+sp.state.volume<-c("State level all subplots volume",
+                    median(sp.state$Q_VOLCSNET, na.rm=T),
+                    IQR(sp.state$Q_VOLCSNET, na.rm=T),
+                   sd(sp.state$errvolcsnet, na.rm=T),
+                    as.numeric(length(na.omit(sp.state$errvolcsnet))),
+                    as.numeric(mean(sp.state$errvolcsnet, na.rm=T)),
+                    as.numeric(mean(sp.state$errabsvolcsnet, na.rm=T)),
+                    as.numeric(mean(sp.state$erractvolcsnet, na.rm=T)),
+                    as.numeric(quantile(sp.state$errabsvolcsnet, 0.25, na.rm=T)),
+                    as.numeric(quantile(sp.state$errabsvolcsnet, 0.50, na.rm=T)),
+                    as.numeric(quantile(sp.state$errabsvolcsnet, 0.75, na.rm=T)),
+                    as.numeric(quantile(sp.state$errabsvolcsnet, 0.95, na.rm=T)))
+sp.state.volume
+
+sp.state.biomass<-c("State level all subplots biomass",
+                     median(sp.state$Q_DRYBIOT, na.rm=T),
+                     IQR(sp.state$Q_DRYBIOT, na.rm=T),
+                     sd(sp.state$errbiot, na.rm=T),
+                     as.numeric(length(na.omit(sp.state$errbiot))),
+                     as.numeric(mean(sp.state$errbiot, na.rm=T)),
+                     as.numeric(mean(sp.state$errabsbiot, na.rm=T)),
+                     as.numeric(mean(sp.state$erractbiot, na.rm=T)),
+                     as.numeric(quantile(sp.state$errabsbiot, 0.25, na.rm=T)),
+                     as.numeric(quantile(sp.state$errabsbiot, 0.50, na.rm=T)),
+                     as.numeric(quantile(sp.state$errabsbiot, 0.75, na.rm=T)),
+                     as.numeric(quantile(sp.state$errabsbiot, 0.95, na.rm=T)))
+
+sp.state.BA<-c("State level all subplots basal area",
+                median(sp.state$Q_BA, na.rm=T),
+                IQR(sp.state$Q_BA, na.rm=T),
+                sd(sp.state$errBA, na.rm=T),
+                as.numeric(length(na.omit(sp.state$errBA))),
+                as.numeric(mean(sp.state$errBA, na.rm=T)),
+                as.numeric(mean(sp.state$errabsBA, na.rm=T)),
+                as.numeric(mean(sp.state$erractBA, na.rm=T)),
+                as.numeric(quantile(sp.state$errabsBA, 0.25, na.rm=T)),
+                as.numeric(quantile(sp.state$errabsBA, 0.50, na.rm=T)),
+                as.numeric(quantile(sp.state$errabsBA, 0.75, na.rm=T)),
+                as.numeric(quantile(sp.state$errabsBA, 0.95, na.rm=T)))
+
+# 50.2 ################################
+#  dis.state
+dis.state.volume<-c("State level tree agreement volume",
+                     median(dis.state$Q_VOLCSNET, na.rm=T),
+                     IQR(dis.state$Q_VOLCSNET, na.rm=T),
+                    sd(dis.state$errvolcsnet, na.rm=T),
+                     as.numeric(length(na.omit(dis.state$errvolcsnet))),
+                     as.numeric(mean(dis.state$errvolcsnet, na.rm=T)),
+                     as.numeric(mean(dis.state$errabsvolcsnet, na.rm=T)),
+                     as.numeric(mean(dis.state$erractvolcsnet, na.rm=T)),
+                     as.numeric(quantile(dis.state$errabsvolcsnet, 0.25, na.rm=T)),
+                     as.numeric(quantile(dis.state$errabsvolcsnet, 0.50, na.rm=T)),
+                     as.numeric(quantile(dis.state$errabsvolcsnet, 0.75, na.rm=T)),
+                     as.numeric(quantile(dis.state$errabsvolcsnet, 0.95, na.rm=T)))
+dis.state.volume
+
+dis.state.biomass<-c("State level tree agreement biomass",
+                      median(dis.state$Q_DRYBIOT, na.rm=T),
+                      IQR(dis.state$Q_DRYBIOT, na.rm=T),
+                      sd(dis.state$errbiot, na.rm=T),
+                      as.numeric(length(na.omit(dis.state$errbiot))),
+                      as.numeric(mean(dis.state$errbiot, na.rm=T)),
+                      as.numeric(mean(dis.state$errabsbiot, na.rm=T)),
+                      as.numeric(mean(dis.state$erractbiot, na.rm=T)),
+                      as.numeric(quantile(dis.state$errabsbiot, 0.25, na.rm=T)),
+                      as.numeric(quantile(dis.state$errabsbiot, 0.50, na.rm=T)),
+                      as.numeric(quantile(dis.state$errabsbiot, 0.75, na.rm=T)),
+                      as.numeric(quantile(dis.state$errabsbiot, 0.95, na.rm=T)))
+
+dis.state.BA<-c("State level tree agreement basal area",
+                 median(dis.state$Q_BA, na.rm=T),
+                 IQR(dis.state$Q_BA, na.rm=T),
+                 sd(dis.state$errBA, na.rm=T),
+                 as.numeric(length(na.omit(dis.state$errBA))),
+                 as.numeric(mean(dis.state$errBA, na.rm=T)),
+                 as.numeric(mean(dis.state$errabsBA, na.rm=T)),
+                 as.numeric(mean(dis.state$erractBA, na.rm=T)),
+                 as.numeric(quantile(dis.state$errabsBA, 0.25, na.rm=T)),
+                 as.numeric(quantile(dis.state$errabsBA, 0.50, na.rm=T)),
+                 as.numeric(quantile(dis.state$errabsBA, 0.75, na.rm=T)),
+                 as.numeric(quantile(dis.state$errabsBA, 0.95, na.rm=T)))
+
+# 50.3 ################################
+# dif.state
+dif.state.volume<-c("State level disagree forested volume",
+                     median(dif.state$Q_VOLCSNET, na.rm=T),
+                     IQR(dif.state$Q_VOLCSNET, na.rm=T),
+                    sd(dif.state$errvolcsnet, na.rm=T),
+                     as.numeric(length(na.omit(dif.state$errvolcsnet))),
+                     as.numeric(mean(dif.state$errvolcsnet, na.rm=T)),
+                     as.numeric(mean(dif.state$errabsvolcsnet, na.rm=T)),
+                     as.numeric(mean(dif.state$erractvolcsnet, na.rm=T)),
+                     as.numeric(quantile(dif.state$errabsvolcsnet, 0.25, na.rm=T)),
+                     as.numeric(quantile(dif.state$errabsvolcsnet, 0.50, na.rm=T)),
+                     as.numeric(quantile(dif.state$errabsvolcsnet, 0.75, na.rm=T)),
+                     as.numeric(quantile(dif.state$errabsvolcsnet, 0.95, na.rm=T)))
+dif.state.volume
+
+dif.state.biomass<-c("State level disagree forested biomass",
+                      median(dif.state$Q_DRYBIOT, na.rm=T),
+                      IQR(dif.state$Q_DRYBIOT, na.rm=T),
+                      sd(dif.state$errbiot, na.rm=T),
+                      as.numeric(length(na.omit(dif.state$errbiot))),
+                      as.numeric(mean(dif.state$errbiot, na.rm=T)),
+                      as.numeric(mean(dif.state$errabsbiot, na.rm=T)),
+                      as.numeric(mean(dif.state$erractbiot, na.rm=T)),
+                      as.numeric(quantile(dif.state$errabsbiot, 0.25, na.rm=T)),
+                      as.numeric(quantile(dif.state$errabsbiot, 0.50, na.rm=T)),
+                      as.numeric(quantile(dif.state$errabsbiot, 0.75, na.rm=T)),
+                      as.numeric(quantile(dif.state$errabsbiot, 0.95, na.rm=T)))
+
+dif.state.BA<-c("State level disagree forested basal area",
+                 median(dif.state$Q_BA, na.rm=T),
+                 IQR(dif.state$Q_BA, na.rm=T),
+                 sd(dif.state$errBA, na.rm=T),
+                 as.numeric(length(na.omit(dif.state$errBA))),
+                 as.numeric(mean(dif.state$errBA, na.rm=T)),
+                 as.numeric(mean(dif.state$errabsBA, na.rm=T)),
+                 as.numeric(mean(dif.state$erractBA, na.rm=T)),
+                 as.numeric(quantile(dif.state$errabsBA, 0.25, na.rm=T)),
+                 as.numeric(quantile(dif.state$errabsBA, 0.50, na.rm=T)),
+                 as.numeric(quantile(dif.state$errabsBA, 0.75, na.rm=T)),
+                 as.numeric(quantile(dif.state$errabsBA, 0.95, na.rm=T)))
+
+###########################################################################################
+
+########## stopped here on the ccar drive
+p1<-ggplot(sp.forest, aes(x=typgrp, y=erractBA))+geom_point( col="blue")+ggtitle("All subplots n=4838")+ylab("%")
+p2<-ggplot(sp.forest, aes(x=typgrp, y=erractbiot ))+geom_point( col="dark green")+ggtitle("All subplots n=4838")+ylab("%")
+p3<-ggplot(sp.forest, aes(x=typgrp, y=erractvolcsnet ))+geom_point(col="brown")+ggtitle("All subplots n=4838")+ylab("%")
+
+
+
+p4<-ggplot(dif.forest, aes(x=typgrp, y=erractBA ))+geom_point( col="blue")+ggtitle("Agreed forested cond n=4814")+ylab("%")
+p5<-ggplot(dif.forest, aes(x=typgrp, y=erractbiot ))+geom_point(col="dark green")+ggtitle("Agreed forested cond n=4814")+ylab("%")
+p6<-ggplot(dif.forest, aes(x=typgrp, y=erractvolcsnet ))+geom_point(col="brown")+ggtitle("Agreed forested cond n=4814")+ylab("%")
+
+p7<-ggplot(dis.forest, aes(x=typgrp, y=erractBA ))+geom_point( col="blue")+ggtitle("Agreed on trees n=4520")+ylab("BA %")
+p8<-ggplot(dis.forest, aes(x=typgrp, y=erractbiot ))+geom_point(col="dark green")+ggtitle("Agreed on trees n=4520")+ylab("Biomass%")
+p9<-ggplot(dis.forest, aes(x=typgrp, y=erractvolcsnet ))+geom_point(col="brown")+ggtitle("Agreed on trees n=4520")+ylab("Volume %")
+
+ggarrange(p1, p2, p3, p4, p5, p6 , p7, p8, p9)
+
+
+########## stopped here on the ccar drive
+p1<-ggplot(sp.state, aes(x=State, y=erractBA))+geom_point( col="blue")+ggtitle("All subplots n=4838")+ylab("%")
+p2<-ggplot(sp.state, aes(x=State, y=erractbiot ))+geom_point( col="dark green")+ggtitle("All subplots n=4838")+ylab("%")
+p3<-ggplot(sp.state, aes(x=State, y=erractvolcsnet ))+geom_point(col="brown")+ggtitle("All subplots n=4838")+ylab("%")
+
+p4<-ggplot(dif.state, aes(x=State, y=erractBA ))+geom_point( col="blue")+ggtitle("Agreed forested cond n=4814")+ylab("%")
+p5<-ggplot(dif.state, aes(x=State, y=erractbiot ))+geom_point(col="dark green")+ggtitle("Agreed forested cond n=4814")+ylab("%")
+p6<-ggplot(dif.state, aes(x=State, y=erractvolcsnet ))+geom_point(col="brown")+ggtitle("Agreed forested cond n=4814")+ylab("%")
+
+p7<-ggplot(dis.state, aes(x=State, y=erractBA ))+geom_point( col="blue")+ggtitle("Agreed on trees n=4520")+ylab("BA %")
+p8<-ggplot(dis.state, aes(x=State, y=erractbiot ))+geom_point(col="dark green")+ggtitle("Agreed on trees n=4520")+ylab("Biomass%")
+p9<-ggplot(dis.state, aes(x=State, y=erractvolcsnet ))+geom_point(col="brown")+ggtitle("Agreed on trees n=4520")+ylab("Volume %")
+
+ggarrange(p1, p2, p3, p4, p5, p6 , p7, p8, p9)
+
+
+
+###  make the dataframe
+
+
+df.vol = data.frame("-","-","-","-","-","-","-","-","-","-","-","-")       # df.cont is a data frame
+
+colnames(df.vol)<-c('variable (units)', 'median','IQR','sd of the disagreement', 'n', 'Mean disagreement', 'Mean abs. disagreement','Relative Abs. disagreement','p25','p50','p75','p95')
+
+
+## this is one way to do it, by forest and state level
+vol.var <- rbind(
+  df.vol,tree.BA,
+  df.vol, sp.BA, dis.BA, dif.BA,
+  df.vol, sp.forest.BA, dis.forest.BA, dif.forest.BA,
+  df.vol, sp.state.biomass, dis.state.biomass, dif.state.biomass,
+  df.vol,
+  df.vol, tree.biomass, 
+  df.vol, sp.biomass, dis.biomass, dif.biomass,
+  df.vol, sp.forest.biomass, dis.forest.biomass, dif.forest.biomass,
+  df.vol, sp.state.BA, dis.state.BA, dif.state.BA,
+  df.vol, 
+  df.vol, tree.volume, 
+  df.vol, sp.volume, dis.volume, dif.volume,
+  df.vol, sp.forest.volume, dis.forest.volume, dif.forest.volume,
+  df.vol, sp.state.volume, dis.state.volume, dif.state.volume
+)
+  
+vol.var               
+
+# do all of volume first
+
+colnames(df.vol)<-c('variable (units)', 'median','IQR','sd of the disagreement', 'n', 'Mean disagreement', 'Mean abs. disagreement','Relative Abs. disagreement','p25','p50','p75','p95')
+
+vol.var<-vol.var[ ,c(1,5,2,3,6,7,8,9,10,11,12,4)]
+
+t<-as.data.frame(table(sp.sums$typgrp))
+t
+write.csv(t, file="forest_type_group.csv")
+
+vol.var
+               
+write.csv(vol.var, file="basal area biomass volume 7_6_2023.csv")
+
+               
+               
+
+
