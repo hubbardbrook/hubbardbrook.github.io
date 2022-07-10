@@ -100,7 +100,7 @@ p1
 # Write a html file 
 ```{r}
 # this line writes the html file to create interactive graphs for the online book
-htmlwidgets::saveWidget(as_widget(p1), "climateChange/HQ_air_temp.html")
+htmlwidgets::saveWidget(as_widget(p1), "HQ_air_temp.html")
 ```
 
-hubbardbrook.github.io/climateChange/HQ_air_temp.html
+# hubbardbrook.github.io/HQ_air_temp.html
