@@ -1,20 +1,11 @@
 ---
-title: "Visualizing the data stream of long-term records for the online book"
+title: "An R Markdown document for air temperature at HB"
 author: "Alex Young"
 date: '2022-07-13'
 output: html_document
 ---
-
-
 ```{r setup, warning=FALSE, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
-```
-# Load the R packages
-```{r, warning=FALSE, message=FALSE}
-library(ggplot2) # graphing
-library(tidyr) # dataframe manipulation
-library(lubridate) # for handling date times
-library(plotly) # for making interactive graphs
 ```
 # Read in data from EDI repository
 ```{r}
@@ -30,15 +21,20 @@ air <-read.csv(infile1,header=F ,skip=1 ,sep="," ,
                col.names=c("date",     
                  "STA","MAX","MIN","AVE","Flag"),check.names=TRUE)
 unlink(infile1)
-
-# We have a data column, but its not formatted as a date
-air$DATE<-ymd(air$date) # change how R interprets Date to be a date
-air$Year<-year(air$DATE)
-
-packageID<-"Package ID: knb-lter-hbr.59.10"
+```
+# Load the R packages
+```{r, warning=FALSE, message=FALSE}
+library(ggplot2) # graphing
+library(tidyr) # dataframe manipulation
+library(lubridate) # for handling date times
+library(plotly) # for making interactive graphs
 ```
 # Calculate annual air temp for each water year
 ```{r}
+# format date
+air$DATE<-ymd(air$date) # change how R interprets Date to be a date
+air$Year<-year(air$DATE)
+
 # Use water year starting June 1st
 w.year <- as.numeric(format(air$DATE, "%Y"))
 june.july.sept <- as.numeric(format(air$DATE, "%m")) < 6
@@ -65,14 +61,14 @@ hqa<-aggregate(list(MAX=hq.complete$MAX, MIN=hq.complete$MIN, AVE=hq.complete$AV
 hq_g<-gather(hqa, "type","value", 2:4)
 
 ## calculate difference between recent 6 years compared to first 6 years
-magmin<-format(round(mean(tail(hqa$MIN))-mean(head(hqa$MIN)), digits=0))
-magave<-format(round(mean(tail(hqa$AVE))-mean(head(hqa$AVE)), digits=0))
-magmax<-format(round(mean(tail(hqa$MAX))-mean(head(hqa$MAX)), digits=0))
+magmin<-format(round(mean(tail(hqa$MIN))-mean(head(hqa$MIN)), digits=1), nsmall = 1)
+magave<-format(round(mean(tail(hqa$AVE))-mean(head(hqa$AVE)), digits=1), nsmall = 1)
+magmax<-format(round(mean(tail(hqa$MAX))-mean(head(hqa$MAX)), digits=1), nsmall = 1)
 
 # order temp types
 hq_g$type<-factor(hq_g$type, levels=c("MAX","AVE","MIN"))
 ```
-# graph air temperature at the Hubbard Brook Headquarters
+# construct graph and make a plotly object
 ```{r}
 ## make a ggplot graph
 a1<-ggplot(hq_g, aes(x=wyear, y=value, col=type))+geom_point()+ geom_line()+
@@ -84,11 +80,11 @@ a1<-ggplot(hq_g, aes(x=wyear, y=value, col=type))+geom_point()+ geom_line()+
   theme(axis.text.y=element_text(size=15, colour = "black"),
         axis.title.y=element_text(size=17, colour = "black"),
         axis.text.x=element_text(size=15, colour = "black"))+
-   geom_text(aes(x=1975, y=14.5, label = paste0("Average daily high ",magmax, " degree hotter")),
+   geom_text(aes(x=1977, y=14.8, label = paste0("Average daily high ",magmax, " degrees hotter")),
         size = 4.5, color="orange")+
-   geom_text(aes(x=1972, y=8.2, label = paste0("On average ",magave, " degrees hotter")),
+   geom_text(aes(x=1977, y=8.2, label =  paste0("Daily average temp ",magave, " degrees hotter")),
         size = 4.5, color='black')+
-   geom_text(aes(x=1975, y=3, label = paste0("Average daily low ",magmin, " degrees hotter")),
+   geom_text(aes(x=1977, y=3, label =    paste0("Average daily low  ",magmin, " degrees hotter")),
         size = 4.5, color='blue')+
   ggtitle("Air temperature at the Hubbard Brook Experimental Forest Headquarters")
 
@@ -97,10 +93,10 @@ p1<-ggplotly(a1)
                                   
 p1
 ```
-# Write a html file 
+# Write html file to associated github repository
 ```{r}
 # this line writes the html file to create interactive graphs for the online book
 htmlwidgets::saveWidget(as_widget(p1), "HQ_air_temp.html")
 ```
 
-# hubbardbrook.github.io/HQ_air_temp.html
+### hubbardbrook.github.io/HQ_air_temp.html

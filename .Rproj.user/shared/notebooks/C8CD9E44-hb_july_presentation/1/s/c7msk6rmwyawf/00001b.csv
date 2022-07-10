@@ -1,0 +1,4 @@
+"0","magmax<-format(round(mean(tail(hqa$MAX))-mean(head(hqa$MAX)), digits=1), nsmall = 1)
+"
+"2","Error in tail(hqa$MAX) : object 'hqa' not found
+"
