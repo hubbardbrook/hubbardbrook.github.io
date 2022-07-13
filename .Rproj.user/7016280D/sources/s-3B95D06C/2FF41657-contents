@@ -368,8 +368,8 @@ scale_y_continuous(limits = c((floor(minval/200)*200)-100,(ceiling(maxval/200)*2
         panel.border = element_rect(fill=NA, colour = "black", size=1, linetype="solid"),
         panel.background = element_rect(fill = "transparent",colour = NA)
   ) +   
-  geom_text(aes(x=1960, y=2000, label = paste0("Hubbard Brook, NH has increased ",hb_pre_w3_sen_slp, " mm/yr (",hb_pre_w3_yr_count," years); p = ",hb_pre_w3_sen_p)), size = 5, color="gold3") +
-  geom_text(aes(x=1960, y=1900, label = paste0("Regional average has increased ",regional_pre_sen_slp, " mm/yr (",hb_pre_w3_yr_count," years); p = ",regional_pre_sen_p)), size = 5, color="blue") +
+  geom_text(aes(x=1960, y=2000, label = paste0("Hubbard Brook, NH has increased ",hb_pre_w3_sen_slp, " mm/yr (",hb_pre_w3_yr_count," years); p = ",hb_pre_w3_sen_p)), size = 6, color="gold3") +
+  geom_text(aes(x=1960, y=1900, label = paste0("Regional average has increased ",regional_pre_sen_slp, " mm/yr (",hb_pre_w3_yr_count," years); p = ",regional_pre_sen_p)), size = 6, color="blue") +
   xlab("Water Year (June 1)")
   
 precipit
