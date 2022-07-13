@@ -360,8 +360,8 @@ scale_y_continuous(limits = c((floor(minval/200)*200)-100,(ceiling(maxval/200)*2
         axis.ticks = element_line(colour = "black", size = 0.5),
         axis.ticks.length=unit(.25, "cm"),
         axis.text.y=element_text(size=15, colour = "black"),
-        axis.title.y=element_text(size=20, colour = "black", margin = margin(t = 0, r = 10, b = 0, l = 0)),
-        axis.title.x=element_text(size=20, colour = "black", margin = margin(t = 0, r = 0, b = 10, l = 0)),
+        axis.title.y=element_text(size=16, colour = "black", margin = margin(t = 0, r = 10, b = 0, l = 0)),
+        axis.title.x=element_text(size=16, colour = "black", margin = margin(t = 0, r = 0, b = 10, l = 0)),
         axis.text.x=element_text(size=15, colour = "black"),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
@@ -379,8 +379,6 @@ precipit
 # precipit
 # dev.off()
 
-
-setwd("C:/Users/bears/Desktop")
 getwd()
 pc<-ggplotly(precipit)
 pc

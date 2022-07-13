@@ -373,11 +373,11 @@ scale_y_continuous(limits = c((floor(minval/200)*200)-100,(ceiling(maxval/200)*2
   xlab("Water Year (June 1)")
   
 precipit
-
-dpi=200
-png("my_plot_50.png", width=12*dpi, height=7*dpi, res=dpi)
-precipit
-dev.off()
+# 
+# dpi=200
+# png("my_plot_50.png", width=12*dpi, height=7*dpi, res=dpi)
+# precipit
+# dev.off()
 
 
 setwd("C:/Users/bears/Desktop")
