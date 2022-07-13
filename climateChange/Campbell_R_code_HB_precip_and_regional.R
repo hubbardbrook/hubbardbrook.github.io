@@ -25,14 +25,14 @@ library(plotly)
  bethlehem3_GHCN <- read.dly("ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/all/USC00270707.dly")
  stjohnsbury_GHCN <- read.dly("ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/all/USC00437054.dly")
 
- 
- 
-# could also use:
-hanover_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00273850.dly")
-bethlehem1_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00270703.dly")
-bethlehem2_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00270706.dly")
-bethlehem3_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00270707.dly")
-stjohnsbury_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00437054.dly")
+#  
+#  
+# # could also use:
+# hanover_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00273850.dly")
+# bethlehem1_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00270703.dly")
+# bethlehem2_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00270706.dly")
+# bethlehem3_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00270707.dly")
+# stjohnsbury_GHCN <- read.dly("https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00437054.dly")
 
 # write.csv(hanover_GHCN, file = "GHCN/hanover_GHCN.csv")
 # write.csv(bethlehem1_GHCN, file = "GHCN/bethlehem1_GHCN.csv")
@@ -126,6 +126,12 @@ merge_annual <- merge(mean_prcp_sum, mean_prcp_missing, by = c("wy"), all = TRUE
 colnames(merge_annual) <- c("wy","regional_pre_avg_mm","months_missing")
 merge_annual$regional_pre_avg_mm[(merge_annual$months_missing > 0)] <- NA
 merge_annual$months_missing <- NULL
+
+## if you don't want to pull from external
+#write.csv(merge_annual, file="C:\\Users\\bears\\Documents\\GitHub\\NH_regional.csv")
+merge_annual <-read.csv("C:\\Users\\bears\\Documents\\GitHub\\NH_regional.csv")
+merge_annual
+
 
 #Download precipitation data by watershed
 inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/14/14/c606bfe2f2deb3fa3eabf692ae15f02d"
@@ -282,10 +288,15 @@ colnames(pre_wy) <- c("wy","hb_pre_w3_mm")
 
 merger <- merge(pre_wy, merge_annual, by = c("wy"), all = TRUE)
 
+head(merger)
+###############
+# Re-run with merger just for 1883 to 2014
+####################
+#merger<-merger[merger$wy < 2015,]
+
 hb_only <- merger[!is.na(merger$hb_pre_w3_mm), ] 
 
 hb_pre_sen <- sens.slope(hb_only$hb_pre_w3_mm, conf.level = 0.95)
-hb_pre_sen
 hb_only$hb_pre_slp <- NA
 hb_only$hb_pre_slp[1] <- median(hb_only$hb_pre_w3_mm)-
   (((nrow(hb_only)-1)/2)*hb_pre_sen$estimate)
@@ -349,21 +360,32 @@ scale_y_continuous(limits = c((floor(minval/200)*200)-100,(ceiling(maxval/200)*2
         axis.ticks = element_line(colour = "black", size = 0.5),
         axis.ticks.length=unit(.25, "cm"),
         axis.text.y=element_text(size=15, colour = "black"),
-        axis.title.y=element_text(size=17, colour = "black", margin = margin(t = 0, r = 10, b = 0, l = 0)),
+        axis.title.y=element_text(size=20, colour = "black", margin = margin(t = 0, r = 10, b = 0, l = 0)),
+        axis.title.x=element_text(size=20, colour = "black", margin = margin(t = 0, r = 0, b = 10, l = 0)),
         axis.text.x=element_text(size=15, colour = "black"),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(fill=NA, colour = "black", size=1, linetype="solid"),
         panel.background = element_rect(fill = "transparent",colour = NA)
   ) +   
-  geom_text(aes(x=1935, y=2000, label = paste0("Hubbard Brook, NH has increased ",hb_pre_w3_sen_slp, " mm/yr (",hb_pre_w3_yr_count," years); p = ",hb_pre_w3_sen_p)), size = 4.5, color="gold3") +
-  geom_text(aes(x=1935, y=1900, label = paste0("Regional average has increased ",regional_pre_sen_slp, " mm/yr (",hb_pre_w3_yr_count," years); p = ",regional_pre_sen_p)), size = 4.5, color="blue") +
-  xlab("Year")
+  geom_text(aes(x=1955, y=2000, label = paste0("Hubbard Brook, NH has increased ",hb_pre_w3_sen_slp, " mm/yr (",hb_pre_w3_yr_count," years); p = ",hb_pre_w3_sen_p)), size = 8, color="gold3") +
+  geom_text(aes(x=1955, y=1900, label = paste0("Regional average has increased ",regional_pre_sen_slp, " mm/yr (",hb_pre_w3_yr_count," years); p = ",regional_pre_sen_p)), size = 8, color="blue") +
+  xlab("Water Year (June 1)")
   
 precipit
 
+dpi=200
+png("my_plot_50.png", width=12*dpi, height=7*dpi, res=dpi)
+precipit
+dev.off()
+
+
+setwd("C:/Users/bears/Desktop")
+getwd()
 pc<-ggplotly(precipit)
 pc
+
+
 
 htmlwidgets::saveWidget(as_widget(pc), "climateChange/regional_and_HB_precip.html")
 

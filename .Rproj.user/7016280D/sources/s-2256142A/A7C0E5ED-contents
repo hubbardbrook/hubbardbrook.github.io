@@ -1,0 +1,60 @@
+
+#subset to just HQ
+hq<-air[air$STA=="HQ",]
+
+hq<-hq[hq$wyear<2015,]
+
+# make sure you are only using complete years for the record
+pre.obs<-as.data.frame(table(hq$STA , hq$wyear))
+pre.obs[pre.obs$Freq<360, "Use"]<-"incomplete wyear" # incomplete is < 360 days
+pre.obs[is.na(pre.obs$Use),"Use"]<-"complete"
+
+# match by water year-station, only use 'complete' years
+pre.obs$wys<-paste(pre.obs$Var2, pre.obs$Var1)
+hq$wys<-paste(hq$wyear, hq$STA)
+hq$Use<-pre.obs$Use[match(hq$wys, pre.obs$wys)]
+hq.complete<-hq[hq$Use=="complete",]
+
+# aggregate to annual average
+hqa<-aggregate(list(MAX=hq.complete$MAX, MIN=hq.complete$MIN, AVE=hq.complete$AVE), by=list(wyear=hq.complete$wyear), FUN="mean")
+
+hq_g<-gather(hqa, "type","value", 2:4)
+
+## calculate difference between recent 6 years compared to first 6 years
+magmin<-format(round(mean(tail(hqa$MIN))-mean(head(hqa$MIN)), digits=1), nsmall = 1)
+magave<-format(round(mean(tail(hqa$AVE))-mean(head(hqa$AVE)), digits=1), nsmall = 1)
+magmax<-format(round(mean(tail(hqa$MAX))-mean(head(hqa$MAX)), digits=1), nsmall = 1)
+
+# order temp types
+hq_g$type<-factor(hq_g$type, levels=c("MAX","AVE","MIN"))
+
+## make a ggplot graph
+a1<-ggplot(hq_g, aes(x=wyear, y=value, col=type))+geom_point()+ geom_line()+
+  ylab("Air temperature (C)")+xlab("Water year (June 1st)")+
+  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  labs(col='')+
+  scale_color_manual(values=c(MAX="orange",AVE="black",MIN="blue"))+
+  geom_smooth(method="lm", se=F)+
+  theme(axis.text.y=element_text(size=15, colour = "black"),
+        axis.title.y=element_text(size=17, colour = "black"),
+        axis.text.x=element_text(size=15, colour = "black"))+
+  geom_text(aes(x=1977, y=14.8, label = paste0("Average daily high ",magmax, " degrees hotter")),
+            size = 4.5, color="orange")+
+  geom_text(aes(x=1977, y=8.2, label =  paste0("Daily average temp ",magave, " degrees hotter")),
+            size = 4.5, color='black')+
+  geom_text(aes(x=1977, y=3, label =    paste0("Average daily low  ",magmin, " degrees hotter")),
+            size = 4.5, color='blue')+xlim(1956,2020)+
+  ggtitle("Air temperature at the Hubbard Brook Experimental Forest Headquarters")
+a1
+## plotly object
+p1<-ggplotly(a1)
+
+p1
+```
+# Write html file to associated github repository
+```{r}
+# this line writes the html file to create interactive graphs for the online book
+htmlwidgets::saveWidget(as_widget(p1), "HQ_air_temp.html")
+```
+
+### hubbardbrook.github.io/HQ_air_temp.html
