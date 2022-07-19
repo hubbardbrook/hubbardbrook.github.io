@@ -105,7 +105,7 @@ head(dt1)
 
 table(dt1$Treatment)
 
-   table(dt1$Hor)
+table(dt1$Hor)
 
 ## add names for elevations
 dt1[dt1$El=="U", "Elevation"]<-"Upper"
@@ -223,26 +223,28 @@ picroresp
 
 htmlwidgets::saveWidget(as_widget(picroresp), "soilBiology/f4_micro_respiration.html")
 
-####  Average to the year level, nitrification
-respnit<-aggregate(list(NIT=buj$NIT), by=list(Year=buj$Year, Horizon=buj$Horizon), FUN="mean", na.rm=T)
 
 
-micronit<-ggplot(respnit, aes(x=Year, y=NIT, col=Horizon))+
+####  Average to the year level, denitrigication potential
+respdea<-aggregate(list(DEA=buj$DEA), by=list(Year=buj$Year, Horizon=buj$Horizon), FUN="mean", na.rm=T)
+
+
+microdea<-ggplot(respdea, aes(x=Year, y=DEA, col=Horizon))+
   geom_point()+geom_line()+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   labs(col='Soil horizon')+
   scale_color_manual(values=c("deepskyblue2","orange","grey"))+
   ylab("Denitrification potential (mg/kg/day)")+guides(col="none")
-micronit
+microdea
 
-picronit<-ggplotly(micronit)
-picronit
+picrodea<-ggplotly(microdea)
+picrodea
 
-htmlwidgets::saveWidget(as_widget(picronit), "soilBiology/f5_micro_Nmin.html")
+htmlwidgets::saveWidget(as_widget(picrodea), "soilBiology/f5_micro_Denitrification.html")
 
 
 ####  Average to the year level, DEA-BIOC
-respdea<-aggregate(list(DEA=buj$DEA), by=list(Year=buj$Year, Horizon=buj$Horizon), FUN="mean", na.rm=T)
+head(respdea)
 respdea$horyear<-paste(respdea$Horizon, respdea$Year)
 
 biocav$dea<-respdea$DEA[match(biocav$horyear, respdea$horyear)]
