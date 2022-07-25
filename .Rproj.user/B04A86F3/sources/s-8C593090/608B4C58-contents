@@ -1,4 +1,23 @@
 
+
+
+
+
+
+
+
+
+
+read.csv("phosphorus/Campbell_po4_flow_mm/ws5_stream_WY_flux_gHa.csv")
+
+
+
+
+
+
+
+
+
 # Package ID: knb-lter-hbr.208.7 Cataloging System:https://pasta.edirepository.org.
 # Data set title: Continuous precipitation and stream chemistry data, Hubbard Brook Ecosystem Study, 1963 – present..
 # Data set creator:    - Hubbard Brook Watershed Ecosystem Record (HBWatER) 
