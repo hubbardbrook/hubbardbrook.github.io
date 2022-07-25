@@ -274,15 +274,13 @@ w6no3
 # sum the observations by each water year
 sum6<-aggregate(list(sum_NO3=W6$NO3), by=list(water_year=W6$waterYr),FUN="mean", na.rm=T)
 
-head(sum6)
-
-sum6$nitrate<-sum6$sum_NO3*(14/62)
+sum6$yem<-as.Date(paste0(sum6$year,"-",sum6$month,"-01"), "%Y-%m-%d")
 
 
 
 plot1<-ggplot(sum6, aes(x=water_year, y=sum_NO3))+geom_line(size=2, col="blue")+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  ylab("Average annual NO3 (mg N / L)")+xlab("Water Year (June 1)")+
+  ylab("Average NO3 ( mg / L)")+xlab("Water Year")+
   theme(  axis.text.y=element_text(size=15, colour = "black"),
           axis.title.y=element_text(size=17, colour = "black", margin = margin(t = 0, r = 10, b = 0, l = 0)),
           axis.text.x=element_text(size=15, colour = "black"),  
@@ -300,8 +298,15 @@ plot1<-ggplot(sum6, aes(x=water_year, y=sum_NO3))+geom_line(size=2, col="blue")+
                arrow = arrow(length = unit(0.03, "npc"), ends = "both"))
 plot1
 
-plot1<- ggplotly(plot1)
+plot1<- ggplotly(plot1) %>%
+  layout(title = list(text = paste0('Average annual nitrate concentration in the stream draining WS6 at the Hubbard Brook Experimental Forest.',
+                                    '<br>',
+                                    '<sup>',
+                                    'This figure is updated with current data available in the Envrironmental Data Initiative Repository (https://portal.edirepository.org)',
+                                    '</sup>')))
 plot1
+
+
 # this line writes the html file to create interactive graphs for the online book
 htmlwidgets::saveWidget(as_widget(plot1), "NitrogenCycling/fig1_nitrate_graph.html")
 
