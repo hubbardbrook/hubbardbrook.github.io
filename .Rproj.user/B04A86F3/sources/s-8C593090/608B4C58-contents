@@ -278,25 +278,29 @@ head(sum6)
 
 sum6$nitrate<-sum6$sum_NO3*(14/62)
 
+14/62*3
+  14/62*2.3
+  14/62*1.08
+  14/62*1.03
+  
 
-
-plot1<-ggplot(sum6, aes(x=water_year, y=sum_NO3))+geom_line(size=2, col="blue")+
+plot1<-ggplot(sum6, aes(x=water_year, y=nitrate))+geom_line(size=2, col="blue")+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   ylab("Average annual NO3 (mg N / L)")+xlab("Water Year (June 1)")+
   theme(  axis.text.y=element_text(size=15, colour = "black"),
           axis.title.y=element_text(size=17, colour = "black", margin = margin(t = 0, r = 10, b = 0, l = 0)),
           axis.text.x=element_text(size=15, colour = "black"),  
           axis.title.x=element_text(size=17, colour = "black", margin = margin(t = 0, r = 10, b = 0, l = 0)))+
-  geom_text(aes(x=1990, y=3, label="Soil frost events?"),size=8, color="black") +
+  geom_text(aes(x=1990, y=0.677, label="Soil frost events?"),size=8, color="black") +
     # this is how you can add arrows to your charts
-  geom_segment(x = 1969 , y = 2.25, xend = 1980, yend = 2.8,
+  geom_segment(x = 1969 , y = 0.51, xend = 1980, yend = 0.6322581,
                arrow = arrow(length = unit(0.03, "npc"), ends = "both"))+
-  geom_segment(x = 1973 , y = 2.12, xend = 1985, yend = 2.8,
+  geom_segment(x = 1973 , y = 0.48, xend = 1985, yend = 0.6322581,
                arrow = arrow(length = unit(0.03, "npc"), ends = "both"))+
-  geom_segment(x = 1989 , y = 1.08, xend = 1990, yend = 2.8,
+  geom_segment(x = 1989 , y = 0.24, xend = 1990, yend = 0.6322581,
                arrow = arrow(length = unit(0.03, "npc"), ends = "both"))+
-  geom_text(aes(x=1998, y=2.3, label="Ice storm"),size=8, color="black") +
-  geom_segment(x = 1998 , y = 1.03, xend = 1998, yend = 2.2,
+  geom_text(aes(x=1998, y=0.52, label="Ice storm"),size=8, color="black") +
+  geom_segment(x = 1998 , y = 0.23, xend = 1998, yend = 0.4967742,
                arrow = arrow(length = unit(0.03, "npc"), ends = "both"))
 plot1
 
