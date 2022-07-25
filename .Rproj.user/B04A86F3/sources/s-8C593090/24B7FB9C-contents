@@ -469,14 +469,14 @@ summary(w.complete$PO4_flux)
 0.04/.012
 
 30/94
-
-# get po4 p- from po4  g/ha.   
-w.complete$po4p <- w.complete$PO4_flux * 0.319
-w.complete$po4P <- w.complete$po4p / 3.066188 
-
+# 
+# # get po4 p- from po4  g/ha.   
+# w.complete$po4p <- w.complete$PO4_flux * 0.319
+# w.complete$po4P <- w.complete$po4p / 3.066188 
+# 
 
 # get the volume weighted
-w.complete$po4pL<-w.complete$po4P/w.complete$flow_mm
+w.complete$po4pL<-w.complete$PO4_flux/w.complete$flow_mm
 
 
 #######
@@ -488,7 +488,7 @@ go<-ggplot(pex, aes(x=wyear, y=phosphate, col=Watershed, group=Watershed))+
   geom_point()+geom_line()+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   xlab("Water year (June 1)")+scale_color_manual(values=c("green","black"))+
-  ylab("Volume weighted reactive P (mg P / L)")+geom_vline(xintercept=1984, linetype="dashed",col="purple")
+  ylab("Volume weighted reactive P (mg / L)")+geom_vline(xintercept=1984, linetype="dashed",col="purple")
 go
 po<-ggplotly(go)
 po

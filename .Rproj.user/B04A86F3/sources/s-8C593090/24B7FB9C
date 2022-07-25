@@ -3,9 +3,9 @@
     "path": "~/GitHub/hubbardbrook.github.io/phosphorus/W5_W6_Po4_1970-2005.R",
     "project_path": "phosphorus/W5_W6_Po4_1970-2005.R",
     "type": "r_source",
-    "hash": "0",
+    "hash": "1845037377",
     "contents": "",
-    "dirty": true,
+    "dirty": false,
     "created": 1658758874563.0,
     "source_on_save": false,
     "relative_order": 1,
@@ -16,11 +16,11 @@
         "scrollLine": "477"
     },
     "folds": "",
-    "lastKnownWriteTime": 1658418378,
+    "lastKnownWriteTime": 1658778966,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1658767232137,
+    "last_content_update": 1658778966536,
     "read_only": false,
     "read_only_alternatives": []
 }
