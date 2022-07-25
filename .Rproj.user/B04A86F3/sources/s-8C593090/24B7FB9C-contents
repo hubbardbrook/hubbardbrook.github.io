@@ -414,19 +414,23 @@ ggplot(w.complete, aes(x=wyear, y=PO4_flux, col=Watershed ))+geom_point()
 
 ggplot(w.complete, aes(x=PO4_flux, y=flow_mm, col=Watershed))+geom_point()
 
-
+summary(w.complete$PO4_flux)
 
 #######
 pex<-aggregate(list(flow_mm=w.complete$flow_mm,PO4_flux=w.complete$PO4_flux), by=list(Watershed = w.complete$Watershed, wyear=w.complete$wyear), FUN="mean", na.rm=T)
 
-# multiple phosphate flux * flow
-pex$phosvol<-pex$flow_mm/pex$PO4_flux
 
-go<-ggplot(pex, aes(x=wyear, y=phosvol, col=Watershed, group=Watershed))+
+
+
+
+# multiple phosphate flux * flow
+pe$phosvol<-pe$flow_mm/pe$PO4_flux
+
+go<-ggplot(pe, aes(x=wyear, y=phosvol, col=Watershed, group=Watershed))+
   geom_point()+geom_line()+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   xlab("Water year (June 1)")+scale_color_manual(values=c("green","black"))+
-  ylab("PO4 Flux (g/ha) * Flow (mm)")+geom_vline(xintercept=1983, linetype="dashed",col="purple")
+  ylab("Volume weighted reactive P (mg P / L)")+geom_vline(xintercept=1983, linetype="dashed",col="purple")
 go
 po<-ggplotly(go)
 po
