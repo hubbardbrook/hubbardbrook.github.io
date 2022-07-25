@@ -1,15 +1,37 @@
 
 
 
+w5vol<-read.csv("phosphorus/Campbell_po4_flow_mm/ws5_stream_WY_volwt_conc.csv")
+w5vol$watershed<-"W5"
+w5vol$PO4_volwt
+if (class(w5vol$PO4_volwt)=="factor") w5vol$PO4_volwt <-as.numeric(levels(w5vol$PO4_volwt))[as.integer(w5vol$PO4_volwt) ]               
+if (class(w5vol$PO4_volwt)=="character") w5vol$PO4_volwt <-as.numeric(w5vol$PO4_volwt)
+
+w5vol$PO4_volwt <- ifelse((trimws(as.character(w5vol$PO4_volwt ))==trimws("-888.88")),NA,w5vol$PO4_volwt )               
+suppressWarnings(w5vol$PO4_volwt  <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(w5vol$PO4_volwt ))==as.character(as.numeric("-888.88"))),NA,w5vol$PO4_volwt ))
+
+
+head(w5vol)
+
+
+w5po4<-read.csv("phosphorus/Campbell_po4_flow_mm/ws5_stream_WY_flux_gHa.csv")
+w5po4$watershed<-"W5"
+w6po4<-read.csv("phosphorus/Campbell_po4_flow_mm/ws6_stream_WY_flux_gHa.csv")
+w6po4$watershed<-"W6"
+head(w5po4)
+cam<-rbind(w5po4, w6po4)
+head(cam)
+
+if (class(cam$PO4_flux)=="factor") cam$PO4_flux <-as.numeric(levels(cam$PO4_flux))[as.integer(cam$PO4_flux) ]               
+if (class(cam$PO4_flux)=="character") cam$PO4_flux <-as.numeric(cam$PO4_flux)
+
+cam$PO4_flux <- ifelse((trimws(as.character(cam$PO4_flux))==trimws("-888.88")),NA,cam$PO4_flux)               
+suppressWarnings(cam$PO4_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(cam$PO4_flux))==as.character(as.numeric("-888.88"))),NA,cam$PO4_flux))
 
 
 
 
-
-
-
-
-
+ggplot(cam, aes(x=WaterYear, y=PO4_flux, col=watershed))+geom_point()
 
 
 # read in monthly fluxes for Chemistry of streamwater data for WS6
@@ -383,75 +405,101 @@ w$Year<-year(w$DATE)
 w.year <- as.numeric(format(w$DATE, "%Y"))
 june.july.sept <- as.numeric(format(w$DATE, "%m")) < 6
 w.year[june.july.sept] <- w.year[june.july.sept] - 1
-w$wyear<-w.year # add water year as a column to precip dataset
+w$wyear<-w.year # 
 
 str(w)
 
-w
-
-
-
-# make sure you are only using complete years for the record
-pre.obs<-as.data.frame(table(W5$Watershed , W5$flow_mm))
-pre.obs$wys<-paste(pre.obs$Var2, pre.obs$Var1)
-pre.obs[pre.obs$Freq<12, "Use"]<-"incomplete wyear" # complete is 350 or more days
-pre.obs[is.na(pre.obs$Use),"Use"]<-"complete"
-pre.obs
-
-
-
-
-
-pre.obs$wys<-paste(pre.obs$Var2, pre.obs$Var1)
-w$wys<-paste(w$wyear, w$Watershed)
-w$Use<-pre.obs$Use[match(w$wys, pre.obs$wys)]
-w.complete<-w[w$Use=="complete",]
 
 ## troubleshoot
-ggplot(w.complete, aes(x=wyear, y=flow_mm, col=Watershed ))+geom_point()
+ggplot(w, aes(x=wyear, y=flow_mm, col=Watershed ))+geom_point()
 
-ggplot(w.complete, aes(x=wyear, y=PO4_flux, col=Watershed ))+geom_point()
+ggplot(w, aes(x=wyear, y=PO4_flux, col=Watershed ))+geom_point()
 
 ggplot(w.complete, aes(x=PO4_flux, y=flow_mm, col=Watershed))+geom_point()
 
+
+# make sure you are only using complete years for the record
+po4.d <-as.data.frame(table(w$Watershed , w$wyear , w$Month, is.na(w$PO4_flux)))
+
+
+
+hist(w$PO4_flux, breaks=200)
+
+summary(w$PO4_flux)
+po4.d<-po4.d[po4.d$Freq!=0,]
+
+po4.na<-po4.d[is.na(po4.d$Freq),]
+
+table(po4.d$Var4)
+
+po4<-po4.d[po4.d$Var4=="FALSE",]
+table(po4$Var1, po4$Var2)
+
+
+
+
+pre.use<-as.data.frame(table(po4$Var2, po4$Var1))
+head(pre.use)
+pre.use$wys<-paste(pre.use$Var2, pre.use$Var1)
+pre.use
+pre.use[pre.use$Freq<1, "Use"]<-"incomplete wyear" # complete is 350 or more days
+pre.use[pre.use$Freq>1,"Use"]<-"complete"
+pre.use
+
+head(pre.use)
+head(w)
+w$wys<-paste(w$Watershed,w$wyear)
+
+w$Use<-pre.use$Use[match(w$wys, pre.use$wys)]
+w
+
+w.complete<-w[w$Use=="complete",]
+
+## troubleshoot
+w.complete
+ggplot(w.complete, aes(x=wyear, y=flow_mm, col=Watershed ))+geom_point()
+
+ggplot(w, aes(x=wyear, y=PO4_flux, col=Watershed ))+geom_point()
+
+m1<-ggplot(w.complete, aes(x=flow_mm, y=PO4_flux, col=Watershed))+geom_point()+
+  ggtitle("Monthly PO4 fluxes  are often 0?")+theme_bw()
+
 summary(w.complete$PO4_flux)
 
+0.04/.012
+
+30/94
+
+# get po4 p- from po4  g/ha.   
+w.complete$po4p <- w.complete$PO4_flux * 0.319
+w.complete$po4P <- w.complete$po4p / 3.066188 
+
+
+# get the volume weighted
+w.complete$po4pL<-w.complete$po4P/w.complete$flow_mm
+
+
 #######
-pex<-aggregate(list(flow_mm=w.complete$flow_mm,PO4_flux=w.complete$PO4_flux), by=list(Watershed = w.complete$Watershed, wyear=w.complete$wyear), FUN="mean", na.rm=T)
+pex<-aggregate(list(phosphate=w.complete$po4pL), by=list(Watershed = w.complete$Watershed, wyear=w.complete$wyear), FUN="mean", na.rm=T)
 
+summary(pex$phosphate)
 
-
-
-
-# multiple phosphate flux * flow
-pe$phosvol<-pe$flow_mm/pe$PO4_flux
-
-go<-ggplot(pe, aes(x=wyear, y=phosvol, col=Watershed, group=Watershed))+
+go<-ggplot(pex, aes(x=wyear, y=phosphate, col=Watershed, group=Watershed))+
   geom_point()+geom_line()+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   xlab("Water year (June 1)")+scale_color_manual(values=c("green","black"))+
-  ylab("Volume weighted reactive P (mg P / L)")+geom_vline(xintercept=1983, linetype="dashed",col="purple")
+  ylab("Volume weighted reactive P (mg P / L)")+geom_vline(xintercept=1984, linetype="dashed",col="purple")
 go
 po<-ggplotly(go)
 po
 
-## but we need to do the volume weighted concentration. 
-
-##monthly average of PO4, but 
-
-# Is g/ha right for PO4 flux?   how to get to mg/L
-
-
-
-
 #annual average, volume weighted concentration of soluble reactive P (mg/L) in stream draining from W5 and W6
 
-
-# comparing annual, Vol-wt avg PO4 concentrations
-
-#Fig2 annual average, volume weighted concentrations of soluble reactive P (mg/L) in stream draining from W5 and W6 (Likens, unpublished data)
+# this line writes the html file to create interactive graphs for the online book
+htmlwidgets::saveWidget(as_widget(po), "phosphorus/P_exportW5_W6_Driscoll.html")
 
 
-# add line for Whole tree harvest in 1983
+
+
 
 

@@ -1,4 +1,10 @@
 
+
+
+
+
+
+
 # Package ID: knb-lter-hbr.208.7 Cataloging System:https://pasta.edirepository.org.
 # Data set title: Continuous precipitation and stream chemistry data, Hubbard Brook Ecosystem Study, 1963 – present..
 # Data set creator:    - Hubbard Brook Watershed Ecosystem Record (HBWatER) 
@@ -276,13 +282,9 @@ sum6<-aggregate(list(sum_NO3=W6$NO3), by=list(water_year=W6$waterYr),FUN="mean",
 
 head(sum6)
 
+# this is how you get it per mass N for the intended figure units
 sum6$nitrate<-sum6$sum_NO3*(14/62)
 
-14/62*3
-  14/62*2.3
-  14/62*1.08
-  14/62*1.03
-  
 
 plot1<-ggplot(sum6, aes(x=water_year, y=nitrate))+geom_line(size=2, col="blue")+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
