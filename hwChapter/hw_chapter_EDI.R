@@ -202,115 +202,9 @@ plotfinal<-subplot(p1, p2, p3, nrows=3,
                    shareX = T, shareY = T)
 plotfinal
 
-htmlwidgets::saveWidget(as_widget(plotfinal), "hwChapter/hydrology_2_precip_stream_AET.html")
+#htmlwidgets::saveWidget(as_widget(plotfinal), "hwChapter/hydrology_2_precip_stream_AET.html")
 
 
-
-## Chapter 2.4
-####################################################
-
-# # read in air temperature data,  compare AET with Average annual air temp
-
-# Package ID: knb-lter-hbr.59.10 Cataloging System:https://pasta.edirepository.org.
-# Data set title: Hubbard Brook Experimental Forest: Daily Temperature Record, 1955 - present.
-inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/59/10/9723086870f14b48409869f6c06d6aa8" 
-infile1 <- tempfile()
-try(download.file(inUrl1,infile1,method="curl"))
-if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
-
-
-dt3 <-read.csv(infile1,header=F 
-               ,skip=1
-               ,sep=","  
-               , col.names=c(
-                 "date",     
-                 "STA",     
-                 "MAX",     
-                 "MIN",     
-                 "AVE",     
-                 "Flag"    ), check.names=TRUE)
-
-unlink(infile1)
-
-head(dt3)
-
-
-# We have a data column, but its not formatted as a date
-dt3$DATE<-ymd(dt3$date) # change how R interprets Date to be a date
-dt3$Year<-year(dt3$DATE)
-
-# add in water year
-w.year <- as.numeric(format(dt3$DATE, "%Y"))
-june.july.sept <- as.numeric(format(dt3$DATE, "%m")) < 6
-w.year[june.july.sept] <- w.year[june.july.sept] - 1
-
-dt3$wyear<-w.year # add water year as a column to precip dataset
-dt3$month<-month(dt3$date)
-
-# add in water year-station
-dt3$wys<-paste(dt3$wyear, dt3$STA)
-head(dt3)
-
-
-# make sure you are only using complete years for the record
-pre.obs<-as.data.frame(table(dt3$STA , dt3$wyear))
-pre.obs$wys<- paste(pre.obs$Var2, pre.obs$Var1)
-pre.obs[pre.obs$Freq<350, "Use"]<-"incomplete wyear" # complete is 350 or more days
-pre.obs[is.na(pre.obs$Use),"Use"]<-"complete"
-head(pre.obs, 50)
-
-
-dt3$Use<-pre.obs$Use[match(dt3$wys, pre.obs$wys)]
-
-dt3.complete<-dt3[dt3$Use=="complete",]
-
-
-head(dt3)
-
-# get annual averages of air
-
-growseas<-dt3.complete[dt3.complete$month >="6" & dt3.complete$month <=9 ,]
-annairgrow<-aggregate(list(avtemp=growseas$AVE), by=list( wyear=growseas$wyear), FUN="mean")
-head(annairgrow) 
-
-
-
-
-#visualize to become familiar with data
-ggplot(annairgrow, aes(x=wyear, y=avtemp))+
-  geom_point()+geom_line()+
-  ylab("Growing season air temperature (C)")+xlab("Water year (June 1st)")+
-  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-
-
-
-
-# view trend from 1995-2010 of growing season temp and AET
-
-### bring in av temp to annstr
-annstr$avtemp<-annairgrow$avtemp[match(annstr$wyear, annairgrow$wyear)]
-
-#subset to 1995-2010
-temp_aet<-annstr[annstr$wyear >= "1995" & annstr$wyear <="2010" ,]
-
-
-ch2<-ggplot(temp_aet, aes(x=avtemp, y=AET, col=WS))+geom_point()+
-  geom_smooth(method="lm", se=F)+
-  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Average growing season temperature (C) June 1 - Sep 30")+
-  ylab("Actual Evapotranspiration")
-
-
-pch2<-ggplotly(ch2)
-pch2
-htmlwidgets::saveWidget(as_widget(pch2), "hwChapter/hydrology_2_temp_aet.html")
-
-
-
-## Chapter 2.5
-####################################################
-
-# Forest cutting to increase water supply?
 
 # WS5 clearcut in whole tree harvest 1984-1985.
 head(annstr)
@@ -550,21 +444,21 @@ gca1
 ####################################################
 
 
-## read in monthly flux of stream chemistry for WS2
 
-# Package ID: knb-lter-hbr.16.11 Cataloging System:https://pasta.edirepository.org.
-# Data set title: Hubbard Brook Experimental Forest: Chemistry of Precipitation â Monthly Fluxes, Watershed 2, 1963 - present.
+## read in monthly flux of stream chemistry for WS2
+# Package ID: knb-lter-hbr.4.17 Cataloging System:https://pasta.edirepository.org.
+# Data set title: Hubbard Brook Experimental Forest: Chemistry of Streamwater – Monthly Fluxes, Watershed 2, 1963 - present.
 # Data set creator:    - Hubbard Brook Watershed Ecosystem Record (HBWatER) 
 # Contact:    -  Hubbard Brook Ecosystem Study  - hbr-im@lternet.edu
 # Stylesheet v2.11 for metadata conversion into program: John H. Porter, Univ. Virginia, jporter@virginia.edu 
 
-inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/16/11/907d535e812f3141942ac7274f268710" 
+inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/4/17/a6aeef15070be913ee2f06f431b9b7a7" 
 infile1 <- tempfile()
 try(download.file(inUrl1,infile1,method="curl"))
 if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
 
 
-dt5<-read.csv(infile1,header=F 
+dt5 <-read.csv(infile1,header=F 
                ,skip=1
                ,sep=","  
                ,quot='"' 
@@ -572,7 +466,7 @@ dt5<-read.csv(infile1,header=F
                  "Year",     
                  "Month",     
                  "Year_Month",     
-                 "precip_mm",     
+                 "flow_mm",     
                  "Ca_flux",     
                  "Mg_flux",     
                  "K_flux",     
@@ -589,13 +483,15 @@ dt5<-read.csv(infile1,header=F
                  "DOC_flux",     
                  "TDN_flux",     
                  "DON_flux",     
+                 "DIC_flux",     
                  "SiO2_flux",     
                  "Mn_flux",     
                  "Fe_flux",     
                  "F_flux",     
                  "H_flux",     
                  "pH_volwt",     
-                 "SpecCond_volwt"    ), check.names=TRUE)
+                 "SpecCond_volwt",     
+                 "ANC_volwt"    ), check.names=TRUE)
 
 unlink(infile1)
 
@@ -603,112 +499,22 @@ unlink(infile1)
 
 if (class(dt5$Month)!="factor") dt5$Month<- as.factor(dt5$Month)
 if (class(dt5$Year_Month)!="factor") dt5$Year_Month<- as.factor(dt5$Year_Month)
-if (class(dt5$precip_mm)=="factor") dt5$precip_mm <-as.numeric(levels(dt5$precip_mm))[as.integer(dt5$precip_mm) ]               
-if (class(dt5$precip_mm)=="character") dt5$precip_mm <-as.numeric(dt5$precip_mm)
+if (class(dt5$flow_mm)=="factor") dt5$flow_mm <-as.numeric(levels(dt5$flow_mm))[as.integer(dt5$flow_mm) ]               
+if (class(dt5$flow_mm)=="character") dt5$flow_mm <-as.numeric(dt5$flow_mm)
 if (class(dt5$Ca_flux)=="factor") dt5$Ca_flux <-as.numeric(levels(dt5$Ca_flux))[as.integer(dt5$Ca_flux) ]               
 if (class(dt5$Ca_flux)=="character") dt5$Ca_flux <-as.numeric(dt5$Ca_flux)
-if (class(dt5$Mg_flux)=="factor") dt5$Mg_flux <-as.numeric(levels(dt5$Mg_flux))[as.integer(dt5$Mg_flux) ]               
-if (class(dt5$Mg_flux)=="character") dt5$Mg_flux <-as.numeric(dt5$Mg_flux)
-if (class(dt5$K_flux)=="factor") dt5$K_flux <-as.numeric(levels(dt5$K_flux))[as.integer(dt5$K_flux) ]               
-if (class(dt5$K_flux)=="character") dt5$K_flux <-as.numeric(dt5$K_flux)
-if (class(dt5$Na_flux)=="factor") dt5$Na_flux <-as.numeric(levels(dt5$Na_flux))[as.integer(dt5$Na_flux) ]               
-if (class(dt5$Na_flux)=="character") dt5$Na_flux <-as.numeric(dt5$Na_flux)
-if (class(dt5$Al_Ferron_flux)=="factor") dt5$Al_Ferron_flux <-as.numeric(levels(dt5$Al_Ferron_flux))[as.integer(dt5$Al_Ferron_flux) ]               
-if (class(dt5$Al_Ferron_flux)=="character") dt5$Al_Ferron_flux <-as.numeric(dt5$Al_Ferron_flux)
-if (class(dt5$TMAl_flux)=="factor") dt5$TMAl_flux <-as.numeric(levels(dt5$TMAl_flux))[as.integer(dt5$TMAl_flux) ]               
-if (class(dt5$TMAl_flux)=="character") dt5$TMAl_flux <-as.numeric(dt5$TMAl_flux)
-if (class(dt5$OMAl_flux)=="factor") dt5$OMAl_flux <-as.numeric(levels(dt5$OMAl_flux))[as.integer(dt5$OMAl_flux) ]               
-if (class(dt5$OMAl_flux)=="character") dt5$OMAl_flux <-as.numeric(dt5$OMAl_flux)
-if (class(dt5$Al_ICP_flux)=="factor") dt5$Al_ICP_flux <-as.numeric(levels(dt5$Al_ICP_flux))[as.integer(dt5$Al_ICP_flux) ]               
-if (class(dt5$Al_ICP_flux)=="character") dt5$Al_ICP_flux <-as.numeric(dt5$Al_ICP_flux)
-if (class(dt5$NH4_flux)=="factor") dt5$NH4_flux <-as.numeric(levels(dt5$NH4_flux))[as.integer(dt5$NH4_flux) ]               
-if (class(dt5$NH4_flux)=="character") dt5$NH4_flux <-as.numeric(dt5$NH4_flux)
-if (class(dt5$SO4_flux)=="factor") dt5$SO4_flux <-as.numeric(levels(dt5$SO4_flux))[as.integer(dt5$SO4_flux) ]               
-if (class(dt5$SO4_flux)=="character") dt5$SO4_flux <-as.numeric(dt5$SO4_flux)
-if (class(dt5$NO3_flux)=="factor") dt5$NO3_flux <-as.numeric(levels(dt5$NO3_flux))[as.integer(dt5$NO3_flux) ]               
-if (class(dt5$NO3_flux)=="character") dt5$NO3_flux <-as.numeric(dt5$NO3_flux)
-if (class(dt5$Cl_flux)=="factor") dt5$Cl_flux <-as.numeric(levels(dt5$Cl_flux))[as.integer(dt5$Cl_flux) ]               
-if (class(dt5$Cl_flux)=="character") dt5$Cl_flux <-as.numeric(dt5$Cl_flux)
-if (class(dt5$PO4_flux)=="factor") dt5$PO4_flux <-as.numeric(levels(dt5$PO4_flux))[as.integer(dt5$PO4_flux) ]               
-if (class(dt5$PO4_flux)=="character") dt5$PO4_flux <-as.numeric(dt5$PO4_flux)
-if (class(dt5$DOC_flux)=="factor") dt5$DOC_flux <-as.numeric(levels(dt5$DOC_flux))[as.integer(dt5$DOC_flux) ]               
-if (class(dt5$DOC_flux)=="character") dt5$DOC_flux <-as.numeric(dt5$DOC_flux)
-if (class(dt5$TDN_flux)=="factor") dt5$TDN_flux <-as.numeric(levels(dt5$TDN_flux))[as.integer(dt5$TDN_flux) ]               
-if (class(dt5$TDN_flux)=="character") dt5$TDN_flux <-as.numeric(dt5$TDN_flux)
-if (class(dt5$DON_flux)=="factor") dt5$DON_flux <-as.numeric(levels(dt5$DON_flux))[as.integer(dt5$DON_flux) ]               
-if (class(dt5$DON_flux)=="character") dt5$DON_flux <-as.numeric(dt5$DON_flux)
-if (class(dt5$SiO2_flux)=="factor") dt5$SiO2_flux <-as.numeric(levels(dt5$SiO2_flux))[as.integer(dt5$SiO2_flux) ]               
-if (class(dt5$SiO2_flux)=="character") dt5$SiO2_flux <-as.numeric(dt5$SiO2_flux)
-if (class(dt5$Mn_flux)=="factor") dt5$Mn_flux <-as.numeric(levels(dt5$Mn_flux))[as.integer(dt5$Mn_flux) ]               
-if (class(dt5$Mn_flux)=="character") dt5$Mn_flux <-as.numeric(dt5$Mn_flux)
-if (class(dt5$Fe_flux)=="factor") dt5$Fe_flux <-as.numeric(levels(dt5$Fe_flux))[as.integer(dt5$Fe_flux) ]               
-if (class(dt5$Fe_flux)=="character") dt5$Fe_flux <-as.numeric(dt5$Fe_flux)
-if (class(dt5$F_flux)=="factor") dt5$F_flux <-as.numeric(levels(dt5$F_flux))[as.integer(dt5$F_flux) ]               
-if (class(dt5$F_flux)=="character") dt5$F_flux <-as.numeric(dt5$F_flux)
-if (class(dt5$H_flux)=="factor") dt5$H_flux <-as.numeric(levels(dt5$H_flux))[as.integer(dt5$H_flux) ]               
-if (class(dt5$H_flux)=="character") dt5$H_flux <-as.numeric(dt5$H_flux)
-if (class(dt5$pH_volwt)=="factor") dt5$pH_volwt <-as.numeric(levels(dt5$pH_volwt))[as.integer(dt5$pH_volwt) ]               
-if (class(dt5$pH_volwt)=="character") dt5$pH_volwt <-as.numeric(dt5$pH_volwt)
-if (class(dt5$SpecCond_volwt)=="factor") dt5$SpecCond_volwt <-as.numeric(levels(dt5$SpecCond_volwt))[as.integer(dt5$SpecCond_volwt) ]               
-if (class(dt5$SpecCond_volwt)=="character") dt5$SpecCond_volwt <-as.numeric(dt5$SpecCond_volwt)
 
 # Convert Missing Values to NA for non-dates
-
-dt5$precip_mm <- ifelse((trimws(as.character(dt5$precip_mm))==trimws("-888.88")),NA,dt5$precip_mm)               
-suppressWarnings(dt5$precip_mm <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$precip_mm))==as.character(as.numeric("-888.88"))),NA,dt5$precip_mm))
+dt5$flow_mm <- ifelse((trimws(as.character(dt5$flow_mm))==trimws("-888.88")),NA,dt5$flow_mm)               
+suppressWarnings(dt5$flow_mm <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$flow_mm))==as.character(as.numeric("-888.88"))),NA,dt5$flow_mm))
 dt5$Ca_flux <- ifelse((trimws(as.character(dt5$Ca_flux))==trimws("-888.88")),NA,dt5$Ca_flux)               
 suppressWarnings(dt5$Ca_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$Ca_flux))==as.character(as.numeric("-888.88"))),NA,dt5$Ca_flux))
-dt5$Mg_flux <- ifelse((trimws(as.character(dt5$Mg_flux))==trimws("-888.88")),NA,dt5$Mg_flux)               
-suppressWarnings(dt5$Mg_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$Mg_flux))==as.character(as.numeric("-888.88"))),NA,dt5$Mg_flux))
-dt5$K_flux <- ifelse((trimws(as.character(dt5$K_flux))==trimws("-888.88")),NA,dt5$K_flux)               
-suppressWarnings(dt5$K_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$K_flux))==as.character(as.numeric("-888.88"))),NA,dt5$K_flux))
-dt5$Na_flux <- ifelse((trimws(as.character(dt5$Na_flux))==trimws("-888.88")),NA,dt5$Na_flux)               
-suppressWarnings(dt5$Na_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$Na_flux))==as.character(as.numeric("-888.88"))),NA,dt5$Na_flux))
-dt5$Al_Ferron_flux <- ifelse((trimws(as.character(dt5$Al_Ferron_flux))==trimws("-888.88")),NA,dt5$Al_Ferron_flux)               
-suppressWarnings(dt5$Al_Ferron_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$Al_Ferron_flux))==as.character(as.numeric("-888.88"))),NA,dt5$Al_Ferron_flux))
-dt5$TMAl_flux <- ifelse((trimws(as.character(dt5$TMAl_flux))==trimws("-888.88")),NA,dt5$TMAl_flux)               
-suppressWarnings(dt5$TMAl_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$TMAl_flux))==as.character(as.numeric("-888.88"))),NA,dt5$TMAl_flux))
-dt5$OMAl_flux <- ifelse((trimws(as.character(dt5$OMAl_flux))==trimws("-888.88")),NA,dt5$OMAl_flux)               
-suppressWarnings(dt5$OMAl_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$OMAl_flux))==as.character(as.numeric("-888.88"))),NA,dt5$OMAl_flux))
-dt5$Al_ICP_flux <- ifelse((trimws(as.character(dt5$Al_ICP_flux))==trimws("-888.88")),NA,dt5$Al_ICP_flux)               
-suppressWarnings(dt5$Al_ICP_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$Al_ICP_flux))==as.character(as.numeric("-888.88"))),NA,dt5$Al_ICP_flux))
-dt5$NH4_flux <- ifelse((trimws(as.character(dt5$NH4_flux))==trimws("-888.88")),NA,dt5$NH4_flux)               
-suppressWarnings(dt5$NH4_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$NH4_flux))==as.character(as.numeric("-888.88"))),NA,dt5$NH4_flux))
-dt5$SO4_flux <- ifelse((trimws(as.character(dt5$SO4_flux))==trimws("-888.88")),NA,dt5$SO4_flux)               
-suppressWarnings(dt5$SO4_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$SO4_flux))==as.character(as.numeric("-888.88"))),NA,dt5$SO4_flux))
-dt5$NO3_flux <- ifelse((trimws(as.character(dt5$NO3_flux))==trimws("-888.88")),NA,dt5$NO3_flux)               
-suppressWarnings(dt5$NO3_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$NO3_flux))==as.character(as.numeric("-888.88"))),NA,dt5$NO3_flux))
-dt5$Cl_flux <- ifelse((trimws(as.character(dt5$Cl_flux))==trimws("-888.88")),NA,dt5$Cl_flux)               
-suppressWarnings(dt5$Cl_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$Cl_flux))==as.character(as.numeric("-888.88"))),NA,dt5$Cl_flux))
-dt5$PO4_flux <- ifelse((trimws(as.character(dt5$PO4_flux))==trimws("-888.88")),NA,dt5$PO4_flux)               
-suppressWarnings(dt5$PO4_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$PO4_flux))==as.character(as.numeric("-888.88"))),NA,dt5$PO4_flux))
-dt5$DOC_flux <- ifelse((trimws(as.character(dt5$DOC_flux))==trimws("-888.88")),NA,dt5$DOC_flux)               
-suppressWarnings(dt5$DOC_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$DOC_flux))==as.character(as.numeric("-888.88"))),NA,dt5$DOC_flux))
-dt5$TDN_flux <- ifelse((trimws(as.character(dt5$TDN_flux))==trimws("-888.88")),NA,dt5$TDN_flux)               
-suppressWarnings(dt5$TDN_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$TDN_flux))==as.character(as.numeric("-888.88"))),NA,dt5$TDN_flux))
-dt5$DON_flux <- ifelse((trimws(as.character(dt5$DON_flux))==trimws("-888.88")),NA,dt5$DON_flux)               
-suppressWarnings(dt5$DON_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$DON_flux))==as.character(as.numeric("-888.88"))),NA,dt5$DON_flux))
-dt5$SiO2_flux <- ifelse((trimws(as.character(dt5$SiO2_flux))==trimws("-888.88")),NA,dt5$SiO2_flux)               
-suppressWarnings(dt5$SiO2_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$SiO2_flux))==as.character(as.numeric("-888.88"))),NA,dt5$SiO2_flux))
-dt5$Mn_flux <- ifelse((trimws(as.character(dt5$Mn_flux))==trimws("-888.88")),NA,dt5$Mn_flux)               
-suppressWarnings(dt5$Mn_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$Mn_flux))==as.character(as.numeric("-888.88"))),NA,dt5$Mn_flux))
-dt5$Fe_flux <- ifelse((trimws(as.character(dt5$Fe_flux))==trimws("-888.88")),NA,dt5$Fe_flux)               
-suppressWarnings(dt5$Fe_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$Fe_flux))==as.character(as.numeric("-888.88"))),NA,dt5$Fe_flux))
-dt5$F_flux <- ifelse((trimws(as.character(dt5$F_flux))==trimws("-888.88")),NA,dt5$F_flux)               
-suppressWarnings(dt5$F_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$F_flux))==as.character(as.numeric("-888.88"))),NA,dt5$F_flux))
-dt5$H_flux <- ifelse((trimws(as.character(dt5$H_flux))==trimws("-888.88")),NA,dt5$H_flux)               
-suppressWarnings(dt5$H_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$H_flux))==as.character(as.numeric("-888.88"))),NA,dt5$H_flux))
-dt5$pH_volwt <- ifelse((trimws(as.character(dt5$pH_volwt))==trimws("-888.88")),NA,dt5$pH_volwt)               
-suppressWarnings(dt5$pH_volwt <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$pH_volwt))==as.character(as.numeric("-888.88"))),NA,dt5$pH_volwt))
-dt5$SpecCond_volwt <- ifelse((trimws(as.character(dt5$SpecCond_volwt))==trimws("-888.88")),NA,dt5$SpecCond_volwt)               
-suppressWarnings(dt5$SpecCond_volwt <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(dt5$SpecCond_volwt))==as.character(as.numeric("-888.88"))),NA,dt5$SpecCond_volwt))
-
 
 # Here is the structure of the input data frame:
-str(dt5)                            
+#str(dt5)                            
 
 # conduct data formatting
-head(dt5)
+#head(dt5)
 dt5$DATE<-paste0(dt5$Year_Month,"-01") 
 dt5$DATE<-ymd(dt5$DATE) # change how R interprets Date to be a date
 # add in water year
@@ -723,42 +529,21 @@ monchem<-as.data.frame(table( dt5$wyear))
 monchem$wys<- paste(monchem$Var1)
 monchem[monchem$Freq<12, "Use"]<-"incomplete wyear" # incomplete is less then 12 months
 monchem[is.na(monchem$Use),"Use"]<-"complete"
-head(monchem, 50)
+#head(monchem, 50)
 
 dt5$Use<-monchem$Use[match(dt5$wyear, monchem$wys)]
 
 dt5.complete<-dt5[dt5$Use=="complete",]
 
+head(dt5)
 # Sum the 12 months to get annual totals
 ## Ca is in g/ha
-
-annCaws2<-aggregate(list(Ca.g.ha=dt5.complete$Ca_flux), by=list(wyear=dt5.complete$wyear), FUN="sum")
-head(annCaws2)
+annCa_str_WS2<-aggregate(list(Ca.g.ha=dt5.complete$Ca_flux), by=list(wyear=dt5.complete$wyear), FUN="sum")
+#head(annCa_str_WS6)
 
 
 # Combine WS6 and WS2
-annCaws2$WS<-"W2"
-annCaWS6$WS<-"W6"
-
-annCa26<-rbind(annCaws2,annCaWS6)
-
-# has Ca flux from WS6 changed since the 1960s?
-gca2<-ggplot(annCa26, aes(x=wyear, y=Ca.g.ha, col=WS))+geom_point()+geom_line(size=2)+
-  ggtitle("Decreasing annual Ca flux in devegetated watershed 2 and reference watershed 6  ")+
-  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  xlab("Water year (June 1)")+
-  ylab("Ca (g/ha)")+
-  geom_vline(xintercept=1965, linetype="dashed", col="red")+
-  geom_vline(xintercept=1968, linetype="solid", col="red")+
-  scale_y_log10()
-gca2
-
-pca2<-ggplotly(gca2)
-
-
-# this line writes the html file to create interactive graphs for the online book
-htmlwidgets::saveWidget(as_widget(plotfinal), "hwChapter/Streamwater_nutrient_flux_3.html")
-
+annCa_str_WS2$Watershed<-"WS2"
 
 ####################################################     ##
 # Chapter 4 Element input in bulk precip        ##########
@@ -876,139 +661,71 @@ ginputca1
 pinputca1<-ggplotly(ginputca1)
 
 # this line writes the html file to create interactive graphs for the online book
-htmlwidgets::saveWidget(as_widget(pinputca1), "hwChapter/bulk_precip_4_Ca.html")
-
-
-####################################################     ##
-# Chapter 5 Nutrient accumulation               ##########
-####################################################     ##
-
-## Chapter 5.1
-####################################################
-
-# read in vegetation data for WS6 (received from Mary Martin 2022-06-29 by email)
-
-
-dt7<-read.csv("C:\\Users\\bears\\Downloads\\HubbardBrookWS6_Tree_Biomass_1997.csv")
-
-
-# Here is the structure of the input data frame:
-str(dt7)       
-
-
-tr<-aggregate( list(abv=dt7$ABOVE.kg , blw=dt7$BELOW.kg), by=list(Plot=dt7$Plot, Sp=dt7$SppName), FUN="sum", na.rm=T)
-dim(tr)
-head(tr)
-
-# gather above and below to make graphing easier
-trg<-gather(tr, "abe","value", 3:4)
-head(trg)
-
-ggplot(trg, aes(x=Plot, y=value, fill=Sp))+geom_bar(stat="identity", position="stack", col="black")
-
-## calculate the per area value of biomass on WS6 in 1974.
-
-####  The planimetric area is 13.2 ha
-sum(trg$value) # this is the biomass of the entire region?
-
-w6biomass.kg.ha<-sum(trg$value) / 13.2
-w6biomass.kg.ha # kg of biomass per hectare
-
-w6biomass.g.m2<- w6biomass.kg.ha * 1000 / 10000
-w6biomass.g.m2
-
-# averaged 16,107 grams/m2 in 65
-# is 22495 grams/m2 in 97
-# biomass increased
-
-
-# for every gram of tree, there is 3.13 mg of Ca,  based on dry weight.
-
-w6ca.g.m2<-w6biomass.g.m2 * 0.00313 # grams Ca per gram of wood
-w6ca.g.m2
-
-
-
-
-## Chapter 5.2
-####################################################
-
-# how does this value of Ca in the vegetation from 1965 differ from 1997?
-
-# averaged 50.7 grams of Ca /m2 in 1965.
-# is 70.4 g Ca /m2 in 97.
-
-(70.4-50.7 ) / 50.7 # 39% increase?
-
-
-
-# Chapter 6 Net soil release                    ##########
-####################################################     ##
-
-## Chapter 6.1
-####################################################
-
-# read in  
-
-### bulk precip input
-
-
-### stream output.
-  
-# this is to get net Ca soil release.
-
-
-
-## Chapter 6.2
-####################################################
-
-## calculate weathering input for 1965
-
-
-#  annCaWS6  # stream chemistry W6 
-annCaWS6[annCaWS6$wyear=="1965",]
-annCa_bulk[annCa_bulk$wyear=="1965",]  
-
-annCa_bulk
-
-annCaWS6[annCaWS6$wyear=="1997",]
+#htmlwidgets::saveWidget(as_widget(pinputca1), "hwChapter/bulk_precip_4_Ca.html")
 
 
 
 
 
-  
-  head(annCaWS6)
-  
-  annCa_bulk # 
 
-  sum both, and then add in the storage.    get weathering?  
-  
-## weathering input = stream output - precip input +- storage
-  
-
-
-
-## Chapter 6.3
-####################################################
-
-## calculate for 1974. 
-# work with 1965 - 1997 data.     Use the tree biomass answers
-
-
-
-## Chapter 6.4
-####################################################
 
 ### An independent estimate of primary mineral weathering was 2.8 kg/ha/yr. 
+
 ###   What does this say about overall changes in soil pool during this period of time? Acid rain context.
 
 
-# compare of Ca removed in the WS5 whole tree harvest compared to net soil depletion from 1965-1997 (previously calculated)
 
 
-# simplify by assuming Ca content of WS5 prior to harvest was equal to that on Ws6 in 1997
 
 
-# what would you conclude about acid deposition vs forest harvest as causes of Ca depletion in the 20th century?
+
+
+
+
+
+
+
+
+# What single dataset would have the most explanatory power for primary productivity at Hubbard Brook?   Where do trees grow the fastest. 
+
+
+  
+  
+
+
+head(annstr)
+head(annCa_precip)
+
+head(annCa_str_WS2)
+
+  ggplot(annstr, aes(x=Streamflow, y=Precip, col=wyear))+geom_point()
+  
+  # stream flow volume
+annstr$all_ymean<-mean(annstr$Streamflow)
+annstr$diff<-annstr$Streamflow - annstr$all_ymean  
+
+
+dim(annstr)
+n<- 493
+
+str(annstr) 
+sqrt(sum((annstr$diff^2))   /  (n-1))
+
+
+
+
+
+
+
+
+# calculate the standard error between years
+
+
+  
+  
+  # stream flow concentration
+  
+  
+  
+
 

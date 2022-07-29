@@ -1,0 +1,77 @@
+
+
+
+library(plotly)
+library(lubridate)
+library(ggplot2)
+
+#set working directory so it works on both windows and unix OS:
+path <- "~/../../Box/External-HBEF-DATA/precip_charts_digitize"
+if( .Platform$OS.type == "unix" )
+  path <- "~/Box/External-HBEF-DATA/precip_charts_digitize"
+
+path<-"C:\\Users\\bears\\Box\\precip_charts_digitize" # Alex Y's path
+
+setwd(path)
+
+
+
+
+
+
+# read in L2 and graph traces
+
+
+#make an empty list to hold the data table for each year:
+year_out <- list()
+
+#list the data txt file(s) for each year:
+file_list <- list.files(path = "RG1/RG1_L2", pattern = "yr")
+
+file_list
+
+#Loop through each data file (trace) for that year
+for(i in seq_along(file_list)){
+  #read in data    
+  dat <- read.csv(paste0("RG1/RG1_L2/",file_list[i]), stringsAsFactors=F)
+  dat$DATE <- as.POSIXct(dat$DATE, format = "%Y-%m-%d %H:%M:%S", tz = "EST")
+  
+  #make a table for that chart
+  year_out[[i]] <- dat
+  
+}
+
+big_dat1 <- do.call(rbind,year_out)
+
+
+
+bd1<-big_dat1
+
+bd1$week<-week(bd1$DATE)
+
+bd1$wday<-wday(bd1$DATE, label=TRUE, abbr=FALSE)
+
+head(bd1)
+
+bd1$trace<-sub('.......', '', bd1$Trace)
+head(bd1)
+bd1$Month<-month(bd1$DATE)
+bd1$Month<-as.factor(bd1$Month)
+
+
+l265<-bd1[bd1$Year=="1973",]
+
+v1<-ggplot(l265, aes(x=DATE, y=ppt, col=trace))+geom_point()+
+  facet_wrap(~Month, scales="free", nrow=6)+
+  geom_line()+ggtitle("Year 1973")
+v1
+
+
+d1<-ggplot(l265, aes(x=week, y=ppt, fill=Month))+geom_bar(stat="identity", position="stack", col="black")+ggtitle("Year 1973")+
+  xlab("Week of the year")
+d1
+
+ggarrange(v1,d1)
+
+
+

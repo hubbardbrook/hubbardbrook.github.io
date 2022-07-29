@@ -1,0 +1,26 @@
+{
+    "id": "07A7EBC0",
+    "path": "C:/Users/bears/Box/precip_charts_digitize/RG1/scripts/QAQC-graphing.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "1647232040",
+    "contents": "",
+    "dirty": false,
+    "created": 1658955801587.0,
+    "source_on_save": false,
+    "relative_order": 4,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "146,26",
+        "scrollLine": "139"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1659010458,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1659010458565,
+    "read_only": false,
+    "read_only_alternatives": []
+}

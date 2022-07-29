@@ -1,0 +1,199 @@
+
+## Alex Y visualizing the gaps, dups, and other QA tasks
+library(plotly)
+library(lubridate)
+library(ggplot2)
+
+#set working directory so it works on both windows and unix OS:
+path <- "~/../../Box/External-HBEF-DATA/precip_charts_digitize"
+if( .Platform$OS.type == "unix" )
+  path <- "~/Box/External-HBEF-DATA/precip_charts_digitize"
+
+path<-"C:\\Users\\bears\\Box\\precip_charts_digitize" # Alex Y's path
+
+setwd(path)
+
+
+#read in trace catalog
+tracat<-read.csv("RG1/TraceCatalog_RG1.csv")
+head(tracat)
+dup_charts<-as.data.frame(table(tracat$Trace.ID))
+table(dup_charts$Freq)
+dup_charts[dup_charts$Freq==2,]
+
+tracat$trace<-sub('.......', '', tracat$Trace.ID)
+dup_dates<-as.data.frame(table(tracat$Trace.Start.Date, tracat$trace))
+head(dup_dates)
+table(dup_dates$Freq)
+
+# look at row 4920 and 9838?
+tracat[9839, ]
+tracat[tracat$Trace.Start.Date=="1/25/1960", ]
+
+table(dup_dates$Var2,dup_dates$Freq)
+dup_dates[dup_dates$Freq>0,]
+
+
+
+
+
+
+#read in chart catalog
+chacat<-read.csv("RG1/ChartCatalog_RG1.csv")
+head(chacat)
+dup_charts<-as.data.frame(table(chacat$Image.ID))
+table(dup_charts$Freq)
+dup_charts[dup_charts$Freq==2,]
+
+
+
+library(tidyr)
+cha<-gather(chacat, "type","Date", c(2,4))
+tra<-gather(tracat, "type","Date", 3)
+tra$trace<-sub('.......', '', tra$Trace.ID)
+head(tra)
+tra$trace.date<-paste(tra$trace, tra$Date)
+
+cha$trace<-"NA"
+
+
+cats<-rbind( cha[,c("Image.ID","type","Date","trace")], tra[,c("Image.ID","type","Date","trace")])
+cats$sequence<-as.numeric(sub('...', '', cats$Image.ID))
+cats$ten<-round(cats$sequence, -1)
+cats$hundred<-round(cats$sequence, -2)
+
+cats[cats$sequence==1473 ,]
+head(cats)
+
+cats[cats$type=="Chart.Start.Date","num"]<-"1"
+cats[cats$type=="Trace.Start.Date","num"]<-"2"
+cats[cats$type=="Chart.End.Date","num"]<-"3"
+str(cats)
+cats$Date<-mdy(cats$Date)
+
+ggplot(cats[cats$hundred==1500,], aes(x=Date, y=num, label=type, shape=type, col=trace))+
+  geom_point()+facet_wrap(~ten, scales="free_x", nrow=10)
+
+
+count<-as.data.frame(table(cats$Image.ID))
+table(count$Freq)
+
+##################################################################################
+
+
+
+
+
+## read in gaps for RG1
+gap<-read.csv("RG1/scripts/RG1_gaps.csv")
+gap$year<-year(gap$DATE)
+gap$Month<-month(gap$DATE)
+gp<-as.data.frame(table(gap$year, gap$Month)) # dataframe for graphing
+gp$Month<-gp$Var2
+
+n1<-ggplot(gp, aes(x=Var1, y=Freq, fill=Month))+geom_bar(stat="identity", position="stack", col="black")+
+xlab("Calendar year")+ylab("Number of 15 minute gaps")+theme(axis.text.x = element_text(angle = 90,vjust = .5))
+
+## read in duplitcates for RG1
+dup<-read.csv("RG1/scripts/RG1_dups.csv")
+dup$year<-year(dup$DATE)
+dup$Month<-month(dup$DATE)
+dp<-as.data.frame(table(dup$year, dup$Month))
+dp$Month<-dp$Var2
+dp
+str(dp)
+dp$Var1<-as.numeric(as.character(dp$Var1))
+
+n2<-ggplot(dp, aes(x=Var1, y=Freq, fill=Month))+geom_bar(stat="identity", position="stack", col="black")+
+  xlab("Calendar year")+ylab("Number of 15 minute duplicates")+theme(axis.text.x = element_text(angle = 90,vjust = .5))+
+  scale_x_continuous(limits=c(1957,2011),breaks=seq(1957,2011,1))
+str(dp)
+
+
+library(ggpubr)
+ggarrange(n1,n2, common.legend=T, nrow=2, legend="bottom")
+
+
+###########################################################
+
+#      QAQC graphs by time period (weeks)
+
+#####################
+
+#read in daily totals 1965-2011 read by hand from the charts (obtained digital PRD files from Amey)
+PRD <- read.csv("document_methods_comparison/prd/PRD_1965-2011.csv", stringsAsFactors=F)
+PRD$DAY <- as.Date(PRD$DAY, tz = "EST")
+PRD <- PRD[,c("DAY", "RG1")]
+#read in daily totals for RG1 1956 - 1964 read by hand off the charts (in inches) and entered into a spreadsheet by Nina Lany and Sam Auger on 1/15/2020:
+PRD2 <- read.csv("document_methods_comparison/prd/PRD_1956-1964.csv", stringsAsFactors=F)
+PRD2$RG1 <- PRD2$RG1 * 25.4 #mm per inch conversion factor
+colnames(PRD2) <- c("DAY", "RG1")
+PRD2$DAY <- as.Date(PRD2$DAY, format = "%m/%d/%Y", tz = "EST")
+#combine
+PRD <- rbind(PRD2, PRD)
+
+PRD$DAY<-ymd(PRD$DAY)
+PRD$year<-year(PRD$DAY)
+PRD$month<-month(PRD$DAY)
+PRD$week<-week(PRD$DAY)
+PRD$day<-day(PRD$DAY)
+head(PRD)
+
+ ## make PRD like tl3 below-   then plot both to see the discrepancies. 
+
+## visualize the L3data for 75-84
+tl3<-read.csv("RG1/RG1_L3_cleaned/L3_precip_15min_RG1_1965-1974.csv")
+tl3$DATE<-ymd_hms(tl3$DATE)
+tl3$DAY<-as.Date(tl3$DATE)
+tl3$year<-year(tl3$DATE)
+tl3$month<-month(tl3$DATE)
+tl3$week<-week(tl3$DATE)
+tl3$day<-day(tl3$DATE)
+head(tl3)
+
+
+guse<-subset(tl3, year== 1970 & month ==c(11))
+guse<-subset(tl3, year== 1965 & week ==c(44))
+
+# bring PRD into guse
+guse$daily<-PRD$RG1[match(guse$DAY, PRD$DAY)]
+guse$d96<-guse$daily/96 # 15 min intervals in a day
+p1<-ggplotly(ggplot(guse, aes(x=DATE, y=d96, group=month))+geom_point()+geom_line()+
+  geom_point(aes(x=DATE, y=ppt, col=year))+geom_line(aes(x=DATE, y=ppt,col=year))+
+    scale_x_datetime(date_breaks = "1 day") +
+  facet_wrap(~week, scale='free_x',ncol=1, strip.position="left")+
+  ylab("Precip (mm)")+ theme(axis.text.x = element_text(angle=40, vjust=.5, hjust=1)))
+p1 
+
+
+## duplicates!
+
+temp<-read.csv(temp, file = "RG1/scripts/RG1_dups.csv", row.names = F)
+tedup<-as.data.frame(table(temp$Year, temp$Month))
+tedup$Month<-tedup$Var2
+ggplotly(ggplot(tedup, aes(x=Var1, y=Freq, fill=Month))+
+           geom_bar(stat="identity",position="stack", col="black")+
+           theme(axis.text.x = element_text(angle=40, vjust=.5, hjust=1))+
+           ggtitle("Duplicates in RG1 by month"))
+
+
+######
+
+
+
+
+head(tl3)
+tl3$wday<-wday(tl3$DATE, label=TRUE, abbr=FALSE)
+PRD$wday<-wday(PRD$DAY, label=TRUE, abbr=FALSE)
+
+d1<-ggplot(tl3[tl3$year=="1965",], aes(x=week, y=ppt, fill=wday))+geom_bar(stat="identity", position="stack", col="black")
+
+head(PRD)
+d2<-ggplot(PRD[PRD$year=="1965",], aes(x=week, y=RG1, fill=wday))+geom_bar(stat="identity", position="stack", col="black")
+
+library(ggpubr)
+ggarrange(d1, d2, nrow=1, common.legend = TRUE, legend="bottom")
+
+
+
+
