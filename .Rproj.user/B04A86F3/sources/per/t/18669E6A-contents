@@ -59,11 +59,12 @@ bd1$Month<-month(bd1$DATE)
 bd1$Month<-as.factor(bd1$Month)
 
 
-l265<-bd1[bd1$Year=="1973",]
+y<-"1961"
+l265<-bd1[bd1$Year==y,]
 
 v1<-ggplot(l265, aes(x=DATE, y=ppt, col=trace))+geom_point()+
-  facet_wrap(~Month, scales="free", nrow=6)+
-  geom_line()+ggtitle("Year 1973")
+  facet_wrap(~Month, scales="free_x", nrow=6)+
+  geom_line()+ggtitle(y)
 v1
 
 

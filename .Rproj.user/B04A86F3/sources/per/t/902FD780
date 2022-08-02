@@ -1,26 +1,26 @@
 {
-    "id": "223DDB4B",
-    "path": "C:/Users/bears/Box/precip_charts_digitize/RG1/scripts/1_calc_L1_precip_15min.R",
-    "project_path": null,
+    "id": "902FD780",
+    "path": "~/GitHub/hubbardbrook.github.io/hwChapter/hw_chapter_EDI.R",
+    "project_path": "hwChapter/hw_chapter_EDI.R",
     "type": "r_source",
-    "hash": "2776207422",
+    "hash": "2730717376",
     "contents": "",
     "dirty": false,
-    "created": 1658961035522.0,
+    "created": 1659364318411.0,
     "source_on_save": false,
     "relative_order": 1,
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "129,0",
-        "scrollLine": "95"
+        "cursorPosition": "204,1",
+        "scrollLine": "180"
     },
     "folds": "",
-    "lastKnownWriteTime": 1658962844,
+    "lastKnownWriteTime": 1659059297,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1658962844781,
+    "last_content_update": 1659059297,
     "read_only": false,
     "read_only_alternatives": []
 }
