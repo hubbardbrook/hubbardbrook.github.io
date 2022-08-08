@@ -297,17 +297,20 @@ uj<-July[!July$Elevation=="Upper",]
 iuj<-July[July$Horizon=="Oie",]
 
 ##########
-nmin<-aggregate(list(MIN=iuj$MIN, NIT=iuj$NIT), by=list(Year=iuj$Year, Horizon=iuj$Horizon, Watershed=iuj$Treatment), FUN="mean", na.rm=T)
+nmin<-aggregate(list(MIN=iuj$MIN, NIT=iuj$NIT), by=list(Year=iuj$Year, Horizon=iuj$Horizon, WS=iuj$Treatment), FUN="mean", na.rm=T)
 
 
 st.err <- function(x) {
   sd(x, na.rm=T)/sqrt(length(x))}
 
-nse<-aggregate(list(MIN=iuj$MIN, NIT=iuj$NIT), by=list(Year=iuj$Year, Horizon=iuj$Horizon, Watershed=iuj$Treatment), FUN=st.err)
+nse<-aggregate(list(MIN=iuj$MIN, NIT=iuj$NIT), by=list(Year=iuj$Year, Horizon=iuj$Horizon, WS=iuj$Treatment), FUN=st.err)
 nmin$minse<-nse$MIN
 nmin$nitse<-nse$NIT
 
-
+table(nmin$Watershed)
+nmin[nmin$WS=="BearBrook", "Watershed"]<-"West of W6"
+nmin[nmin$WS=="W1", "Watershed"]<-"W1"
+head(nmin)
 
 dodge<-position_dodge(.8)
 nitgraph<-ggplot(nmin[nmin$Year>1997,], aes(x=Year, y=NIT , fill=Watershed))+
