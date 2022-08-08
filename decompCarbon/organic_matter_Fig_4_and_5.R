@@ -411,7 +411,7 @@ head(yom, 100)
 
  # annotations
  a <- list(
-   text = "Oie",
+   text = "Oi+Oe Horizon",
    xref = "paper",
    yref = "paper",
    yanchor = "bottom",
@@ -423,7 +423,7 @@ head(yom, 100)
  )
  
  b <- list(
-   text = "Oa",
+   text = "Oa Horizon",
    xref = "paper",
    yref = "paper",
    yanchor = "bottom",
@@ -480,9 +480,9 @@ p3<-ggplotly(g3)%>%
 
 p3
 
-subplot(p2, p3,shareX = TRUE, titleY=TRUE,margin=.1)
+p23<-subplot(p2, p3,shareX = TRUE, titleY=TRUE,margin=.1)
 
-htmlwidgets::saveWidget(as_widget(p2), "decompCarbon/Fig5_organicMatter.html")
+htmlwidgets::saveWidget(as_widget(p23), "decompCarbon/Fig5_organicMatter.html")
 
 ####################################################################################################
 
