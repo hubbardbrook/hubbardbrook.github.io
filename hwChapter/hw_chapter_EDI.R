@@ -651,6 +651,9 @@ head(dt6.complete)
 
 annCa_precip<-aggregate(list(Ca.g.ha=dt6.complete$Ca_flux, precip_mm=dt6.complete$precip_mm), by=list(wyear=dt6.complete$wyear), FUN="sum")
 
+
+
+
 ginputca1<-ggplot(annCa_precip, aes(x=wyear, y=Ca.g.ha))+geom_point()+geom_line()+
   ggtitle("Rain gauge 22? : annual input of Ca ")+xlim(1964,2020)+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
@@ -694,11 +697,20 @@ pinputca1<-ggplotly(ginputca1)
 
 
 head(annstr)
-head(annCa_precip)
 
-head(annCa_str_WS2)
+table(annstr$WS)
+jc<-annstr[annstr$WS==c("W5","W6"),]
+ja<-jc[,c(-4,-5,-6)]
+ja
+j<-spread(ja, "WS","Streamflow")
+
 
   ggplot(annstr, aes(x=Streamflow, y=Precip, col=wyear))+geom_point()
+  
+  
+  
+  t.test( ja$Streamflow ~ ja$WS, paired=T)
+  
   
   # stream flow volume
 annstr$all_ymean<-mean(annstr$Streamflow)

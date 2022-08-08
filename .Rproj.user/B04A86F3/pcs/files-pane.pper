@@ -2,8 +2,8 @@
     "sortOrder": [
         {
             "columnIndex": 2,
-            "ascending": false
+            "ascending": true
         }
     ],
-    "path": "~/GitHub/hubbardbrook.github.io/decompCarbon"
+    "path": "~/GitHub/FIA_measurement_error"
 }

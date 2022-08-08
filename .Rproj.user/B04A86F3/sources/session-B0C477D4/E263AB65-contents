@@ -93,8 +93,11 @@ PRD$month<-month(PRD$DAY)
 PRD$week<-week(PRD$DAY)
 PRD$day<-day(PRD$DAY)
 head(PRD)
+tail(PRD)
 
- ## make PRD like tl3 below-   then plot both to see the discrepancies. 
+ 
+
+## make PRD like tl3 below-   then plot both to see the discrepancies. 
 
 ## visualize the L3data for 75-84
 tl3<-read.csv("RG1/RG1_L3_cleaned/L3_precip_15min_RG1_1955-1964.csv")
@@ -105,10 +108,13 @@ tl3$month<-month(tl3$DATE)
 tl3$week<-week(tl3$DATE)
 tl3$day<-day(tl3$DATE)
 head(tl3)
+ 
+# ggplot(tl3, aes(ppt, col=as.factor(month)))+stat_ecdf(geom="step",pad=FALSE)+
+#   facet_grid(year~month)
 
 
 guse<-subset(tl3, year== 1970 & month ==c(11))
-guse<-subset(tl3, year== 1961 & week ==c(35))
+guse<-subset(tl3, year== 1964 & week ==c(49))
 
 # bring PRD into guse
 guse$daily<-PRD$RG1[match(guse$DAY, PRD$DAY)]
