@@ -1,0 +1,135 @@
+#############################################################
+# calc_precip_15min.R
+# nina.lany@usda.gov
+# October 29, 2019
+#
+# Purpose: This script reads in the xy values extracted
+#  by the datathief program, and calulates absolute pixel
+#  values (datetime on x axis and inches on y axis.
+#
+#
+#############################################################
+rm(list = ls())
+
+#this is what I ran is Powershell to make a directory for each year:
+# '.\Box\External-HBEF-DATA\precip_charts_digitize\RG1\RG1_L0
+#mkdir $(1957..2005 | %{"yr$_"})
+
+# Check for and install required packages
+for (package in c('tidyverse', 'lubridate')) {
+  if (!require(package, character.only=T, quietly=T)) {
+    install.packages(package)
+    library(package, character.only=T)
+  }
+}
+
+#set working directory so it works on both windows and unix OS:
+path <- "~/../../Box/External-HBEF-DATA/precip_charts_digitize"
+if( .Platform$OS.type == "unix" )
+  path <- "~/Box/External-HBEF-DATA/precip_charts_digitize"
+
+path<-"C:\\Users\\bears\\Box\\precip_charts_digitize" # Alex Y's path
+setwd(path)
+
+
+#set constants
+R=191 #length of the pen arm, in mm
+
+#read in chart type ancillary table:
+chartType <- read.csv("Chart_Type.csv", stringsAsFactors = F)
+str(chartType)
+unique(chartType$Chart.Type)
+
+#read in chart catalog ancillary table:
+chartCat <- read.csv("RG1/ChartCatalog_RG1.csv", stringsAsFactors = F)
+unique(chartCat$Chart.Type)
+
+#read in trace ancillary table:
+traceCat <- read.csv("RG1/TraceCatalog_RG1.csv", stringsAsFactors = F)
+str(traceCat)
+
+
+#build table with a row for each trace and all pertinent info in columns
+metaDat <- merge(traceCat, chartCat[,c("Image.ID", "Chart.Type")], by = "Image.ID", all.x = T, all.y = F)
+metaDat <- merge(metaDat, chartType, by = "Chart.Type", all.x = T, all.y = F)
+str(metaDat)
+
+
+##list the directories (one for each year) 
+#yeardirs <- list.files(path = "RG1/RG1_L0", pattern = "yr")
+## OR ##
+#select which years to process:
+
+yeardirs<- c("yr2011")
+
+
+#Loop through each year separately:
+for (j in seq_along(yeardirs)){
+#for(j in 2:length(yeardirs)){  ##skip the first year
+#read in data txt file(s)
+  file_list <- list.files(path = paste0("RG1/RG1_L0/",yeardirs[j]), pattern = "txt")
+  for(i in seq_along(file_list)){
+#get names of traces from file_list:
+Trace.strings <- sapply(strsplit(file_list[i], "\\."), "[", 1:2)
+Traces <- paste(Trace.strings[1,], Trace.strings[2,], sep = ".")
+
+dat <- read.csv(paste0("RG1/RG1_L0/", yeardirs[j],"/",file_list[i]), header = F, skip = 1)
+names(dat) <- c("dtx", "dty") #think 'data thief x' and 'data thief y'
+
+#subset metadat for this trace:
+MD <- subset(metaDat, Trace.ID == Traces)
+
+# set the begin time for each trace. This is the date-time of the begin of the chart, at the origin, whether or not the trace line (ink) extends all the way to the ends of the chart.
+begin=paste(MD$Trace.Start.Date, MD$start.hour)
+begindt=as.POSIXct(begin, tz="EST", format = "%m/%d/%Y %H:%M")
+beginDT <- as.integer(begindt) #this is time in seconds
+
+###set parameters specific to the chart type:
+#calculate secpnds per mm, given theS chart type:
+secpermm=(MD$hrs.per.chart*60*60)/MD$Length.mm
+
+# define height and length of chart in mm:
+h=MD$Height.mm
+w=MD$Length.mm
+H=h/2 #H is the height to the circle center, or half of the total height h. See diagram.
+
+
+###calculations per data point:
+# calculate theta
+dat$theta=asin( (dat$dty - H[1]) / R)
+
+# calculate circle center as funcion of theta
+dat$xc = dat$dtx + (R * cos(dat$theta) )
+
+# calculate phi 
+dat$phi = asin(-H[1] / R ) 
+
+
+# calculate corrected x position
+dat$xcor= dat$xc - (R * cos(dat$phi))
+
+#convert x back to calendar time
+dat$xtime=beginDT[1]+(dat$xcor*secpermm[1]) #seconds plus corrected mm * (sec/mm)
+dat$DATETIME=as.POSIXct(dat$xtime,tz="EST",origin="1970-01-01")
+
+#create timevec for every 15 minutes and intepolate...
+timevec <- seq(ceiling_date(min(dat$DATETIME), "15 minutes"), floor_date(max(dat$DATETIME), "15 minutes"), by = "15 min") 
+dat.interp <- approx(x=dat$DATETIME, y=dat$dty, xout=timevec, method = "linear")
+
+str(dat.interp)
+
+#write out L1 data
+write.csv(dat.interp, file = paste0("RG1/RG1_L1/",yeardirs[j],"/", Traces, ".csv"), row.names = F)
+  }
+
+}
+
+i
+file_list[i]
+
+
+## issue years (when running the years. Last chart of year, b trace. )
+# 1956, 1964, 1969, 1970, 1971, 1974,
+# 1976, 1977, 1985,
+# 1986, 1991, 1992, 
+# 2001, 2007,
