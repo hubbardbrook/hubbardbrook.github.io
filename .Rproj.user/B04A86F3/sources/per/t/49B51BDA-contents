@@ -1,0 +1,185 @@
+
+## Alex Y visualizing the gaps, dups, and other QA tasks
+library(plotly)
+library(lubridate)
+library(ggplot2)
+
+#set working directory so it works on both windows and unix OS:
+path <- "~/../../Box/External-HBEF-DATA/precip_charts_digitize"
+if( .Platform$OS.type == "unix" )
+  path <- "~/Box/External-HBEF-DATA/precip_charts_digitize"
+
+path<-"C:\\Users\\bears\\Box\\precip_charts_digitize" # Alex Y's path
+
+setwd(path)
+
+
+#read in trace catalog
+tracat<-read.csv("RG1/TraceCatalog_RG1.csv")
+head(tracat)
+dup_charts<-as.data.frame(table(tracat$Trace.ID))
+table(dup_charts$Freq)
+dup_charts[dup_charts$Freq==2,] # this will show any duplicated trace chart 
+
+tracat$trace<-sub('.......', '', tracat$Trace.ID)
+dup_dates<-as.data.frame(table(tracat$Trace.Start.Date, tracat$trace))
+head(dup_dates)
+table(dup_dates$Freq)
+dup_dates[dup_dates$Freq>1,]
+
+
+#read in chart catalog
+chacat<-read.csv("RG1/ChartCatalog_RG1.csv")
+head(chacat)
+dup_charts<-as.data.frame(table(chacat$Image.ID))
+table(dup_charts$Freq)
+dup_charts[dup_charts$Freq>1,]
+
+
+###############
+## read in gaps for RG1
+gap<-read.csv("RG1/scripts/RG1_gaps.csv")
+gap$year<-year(gap$DATE)
+gap$Month<-month(gap$DATE)
+gp<-as.data.frame(table(gap$year, gap$Month)) # dataframe for graphing
+gp$Month<-gp$Var2
+
+n1<-ggplot(gp, aes(x=Var1, y=Freq/96, fill=Month))+geom_bar(stat="identity", position="stack", col="black")+
+xlab("Calendar year")+ylab("Number of gaps (days)")+theme(axis.text.x = element_text(angle = 90,vjust = .5))
+n1
+
+
+## read in duplitcates for RG1
+dup<-read.csv("RG1/scripts/RG1_dups.csv")
+dup$year<-year(dup$DATE)
+dup$Month<-month(dup$DATE)
+dp<-as.data.frame(table(dup$year, dup$Month))
+dp$Month<-dp$Var2
+dp
+str(dp)
+dp$Var1<-as.numeric(as.character(dp$Var1))
+
+n2<-ggplot(dp, aes(x=Var1, y=Freq, fill=Month))+geom_bar(stat="identity", position="stack", col="black")+
+  xlab("Calendar year")+ylab("Number of 15 minute duplicates")+theme(axis.text.x = element_text(angle = 90,vjust = .5))+
+  scale_x_continuous(limits=c(1957,2011),breaks=seq(1957,2011,1))
+n2
+
+
+library(ggpubr)
+ggarrange(n1,n2, common.legend=T, nrow=2, legend="bottom")
+
+
+###########################################################
+
+#      QAQC graphs by time period (weeks)
+
+#####################
+
+#read in daily totals 1965-2011 read by hand from the charts (obtained digital PRD files from Amey)
+PRD <- read.csv("document_methods_comparison/prd/PRD_1965-2011.csv", stringsAsFactors=F)
+PRD$DAY <- as.Date(PRD$DAY, tz = "EST")
+PRD <- PRD[,c("DAY", "RG1")]
+#read in daily totals for RG1 1956 - 1964 read by hand off the charts (in inches) and entered into a spreadsheet by Nina Lany and Sam Auger on 1/15/2020:
+PRD2 <- read.csv("document_methods_comparison/prd/PRD_1956-1964.csv", stringsAsFactors=F)
+PRD2$RG1 <- PRD2$RG1 * 25.4 #mm per inch conversion factor
+colnames(PRD2) <- c("DAY", "RG1")
+PRD2$DAY <- as.Date(PRD2$DAY, format = "%m/%d/%Y", tz = "EST")
+#combine
+PRD <- rbind(PRD2, PRD)
+
+PRD$DAY<-ymd(PRD$DAY)
+PRD$year<-year(PRD$DAY)
+PRD$month<-month(PRD$DAY)
+PRD$week<-week(PRD$DAY)
+PRD$day<-day(PRD$DAY)
+head(PRD)
+tail(PRD)
+
+ 
+
+## make PRD like tl3 below-   then plot both to see the discrepancies. 
+
+## visualize the L3data for 75-84
+tl3<-read.csv("RG1/RG1_L3_cleaned/L3_precip_15min_RG1.csv")
+tl3$DATE<-ymd_hms(tl3$DATE)
+tl3$DAY<-as.Date(tl3$DATE)
+tl3$year<-year(tl3$DATE)
+tl3$month<-month(tl3$DATE)
+tl3$week<-week(tl3$DATE)
+tl3$day<-day(tl3$DATE)
+head(tl3)
+ 
+# ggplot(tl3, aes(ppt, col=as.factor(month)))+stat_ecdf(geom="step",pad=FALSE)+
+#   facet_grid(year~month)
+
+
+
+guse<-subset(tl3, year== 1970 & month ==c(11))
+guse<-subset(tl3, year== 1973 & week ==c(26))
+
+# bring PRD into guse
+guse$daily<-PRD$RG1[match(guse$DAY, PRD$DAY)]
+guse$d96<-guse$daily/96 # 15 min intervals in a day
+p1<-ggplotly(ggplot(guse, aes(x=DATE, y=d96, group=month))+geom_point()+geom_line()+
+  geom_point(aes(x=DATE, y=ppt, col=year))+geom_line(aes(x=DATE, y=ppt,col=year))+
+    scale_x_datetime(date_breaks = "1 day") +
+  facet_wrap(~week, scale='free_x',ncol=1, strip.position="left")+
+  ylab("Precip (mm)")+ theme(axis.text.x = element_text(angle=40, vjust=.5, hjust=1)))
+p1 
+
+
+######
+head(tl3)
+tl3$wday<-wday(tl3$DATE, label=TRUE, abbr=FALSE)
+PRD$wday<-wday(PRD$DAY, label=TRUE, abbr=FALSE)
+
+
+d1<-ggplot(tl3[tl3$year=="1958",], aes(x=week, y=ppt, fill=wday))+geom_bar(stat="identity", position="stack", col="black")
+d1
+head(PRD)
+d2<-ggplot(PRD[PRD$year=="1965",], aes(x=week, y=RG1, fill=wday))+geom_bar(stat="identity", position="stack", col="black")
+d2
+library(ggpubr)
+ggarrange(d1, d2, nrow=1, common.legend = TRUE, legend="bottom")
+
+
+#####################
+
+
+
+#temporary location:
+RG1 <- read.csv("RG1/RG1_L3_cleaned/L3_precip_15min_RG1.csv", stringsAsFactors = F)
+RG1$DATE <- as.POSIXct(RG1$DATE, format = "%Y-%m-%d %H:%M:%S", tz = "EST")
+#RG1 <- RG1[-which(is.na(RG1$DATE)),]
+str(RG1)
+summary(RG1)
+
+RG1$DATE<-ymd_hms(RG1$DATE)
+RG1$DAY<-as.Date(RG1$DATE)
+RG1$year<-year(RG1$DATE)
+RG1$month<-month(RG1$DATE)
+RG1$week<-week(RG1$DATE)
+RG1$day<-day(RG1$DATE)
+head(RG1)
+
+nap<-as.data.frame(table( RG1$year,is.na(RG1$ppt)))
+
+
+# / 35040 15 minut 
+nap$div<-nap$Freq/365/96 #   % NA values
+nap$dna<-nap$Freq/365
+nap
+
+
+ggplot(nap, aes(x=Var1, y=div, fill=Var2))+geom_bar(stat="identity",position="stack")+
+  theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1))+
+  scale_fill_manual('Is NA or not', values=c('dark green',  "magenta"))
+  
+
+
+summary(nap[nap$Var2=="TRUE","dna"]) # I see that the median value across years is 2.5% of the day is a gap  
+
+# or 2.5 15 minute gaps per day,  ~ half hour.  
+
+
+

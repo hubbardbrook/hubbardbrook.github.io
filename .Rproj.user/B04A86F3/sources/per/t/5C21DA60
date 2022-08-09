@@ -1,0 +1,26 @@
+{
+    "id": "5C21DA60",
+    "path": "C:/Users/bears/Box/precip_charts_digitize/RG1/scripts/1_calc_L1_precip_15min.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "3669220342",
+    "contents": "",
+    "dirty": false,
+    "created": 1659984769589.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "126,1",
+        "scrollLine": "104"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1659987745,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1659987745585,
+    "read_only": false,
+    "read_only_alternatives": []
+}

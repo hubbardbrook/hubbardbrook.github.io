@@ -1,26 +1,26 @@
 {
-    "id": "5C21DA60",
-    "path": "C:/Users/bears/Box/precip_charts_digitize/RG1/scripts/1_calc_L1_precip_15min.R",
+    "id": "0FD218F5",
+    "path": "C:/Users/bears/Box/precip_charts_digitize/RG1/scripts/2_calc_L2_precip_15min.R",
     "project_path": null,
     "type": "r_source",
-    "hash": "3669220342",
+    "hash": "1649595517",
     "contents": "",
     "dirty": false,
-    "created": 1659984769589.0,
+    "created": 1659987797495.0,
     "source_on_save": false,
-    "relative_order": 2,
+    "relative_order": 3,
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "130,0",
-        "scrollLine": "104"
+        "cursorPosition": "153,0",
+        "scrollLine": "20"
     },
     "folds": "",
-    "lastKnownWriteTime": 1659987745,
+    "lastKnownWriteTime": 1659988789,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1659987745585,
+    "last_content_update": 1659988789931,
     "read_only": false,
     "read_only_alternatives": []
 }
