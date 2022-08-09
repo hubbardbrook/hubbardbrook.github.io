@@ -499,9 +499,13 @@ htmlwidgets::saveWidget(as_widget(p23), "decompCarbon/Fig5_organicMatter.html")
 
 table(fom$Watershed)
 
+
+table(om$Horizon)
+head(om)
 ref<-om[om$Watershed=="6",]
 head(ref)
-
+ref<-ref[!ref$Horizon=="min",]
+table(ref$Horizon, ref$Year)
 
 head(fom)
 rom<-aggregate(list(OM=ref$OM_OM), by=list(Year=ref$Year, Plot=ref$Plot), FUN="sum", na.rm=T)
