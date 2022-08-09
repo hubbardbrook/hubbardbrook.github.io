@@ -5,7 +5,7 @@
 # Figure 4 and 5 of soil decomp, Chris Johnson, Mary Margaret Koppers
 
 
-
+# Read in the two EDI datasets for these graphs.  W1 and W6
 
 # Package ID: knb-lter-hbr.172.3 Cataloging System:https://pasta.edirepository.org.
 # Data set title: Mass and Chemistry of Organic Horizons and Surface Mineral Soils on Watershed 6 at the Hubbard Brook Experimental Forest, 1976 - present
@@ -377,11 +377,12 @@ table(om$Year, om$Watershed)
 oa<-om[om$Horizon=="Oa",]
 oie<-om[om$Horizon=="Oie",]
 
-fom<-rbind(oa, oie)
+# the dataframe fom is useful here to only move forward with horizons in Figure 4
+fom<-rbind(oa, oie) # fom is oa and oie horizons
 table(fom$Horizon, fom$Watershed)
 
 
-
+#  Annual average by watershed and horizon
 yom<-aggregate(list(OM=fom$OM_OM), by=list(Year=fom$Year, Watershed=fom$Watershed, Horizon=fom$Horizon), FUN="mean", na.rm=T)
 yom
 
@@ -524,15 +525,22 @@ oom$se<-ose$x
 
 head(oom)
 
+
+xseq <- 1970:2020
+insert_minor <- function(major_labs, n_minor) {labs <- 
+  c( sapply( major_labs, function(x) c(x, rep("", 4) ) ) )
+labs[1:(length(labs)-n_minor)]}
+
+
+
 y2<-ggplot(oom, aes(x=Year, y=OM))+geom_point(size=4)+geom_errorbar(aes(ymin=OM-se, ymax=OM+se))+
-  scale_y_continuous(expand = c(0, 0), limits=c(0,100), breaks=c(0,20,40,60,80,100))+
-  scale_x_continuous(expand = c(0, 0), limits = c(1970, 2022))+
+  scale_y_continuous(expand = c(0, 0), limits=c(0,120), breaks=c(0,20,40,60,80,100))+
+  scale_x_continuous(expand = c(0, 0), limits = c(1970, 2020), breaks=c(1970,2020, by=5),
+                     labels = insert_minor( seq(1970, 2020, by=1) ) )+
   ylab("Forest floor OM mass (Mg/ha)")+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
     text=element_text(size=24))
-
-
-
+y2
 yp2<-ggplotly(y2)
 
 yp2  
