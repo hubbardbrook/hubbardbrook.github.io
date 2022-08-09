@@ -535,13 +535,12 @@ labs[1:(length(labs)-n_minor)]}
 
 y2<-ggplot(oom, aes(x=Year, y=OM))+geom_point(size=4)+geom_errorbar(aes(ymin=OM-se, ymax=OM+se))+
   scale_y_continuous(expand = c(0, 0), limits=c(0,120), breaks=c(0,20,40,60,80,100))+
-  scale_x_continuous(expand = c(0, 0), limits = c(1970, 2020), breaks=c(1970,2020, by=5),
-                     labels = insert_minor( seq(1970, 2020, by=1) ) )+
+  scale_x_continuous(expand = c(0, 0), limits = c(1970, 2020))+
   ylab("Forest floor OM mass (Mg/ha)")+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
     text=element_text(size=24))
 y2
-yp2<-ggplotly(y2)
+yp2<-ggplotly(y2, margin=m)
 
 yp2  
 
