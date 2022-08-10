@@ -481,7 +481,7 @@ p3<-ggplotly(g3)%>%
 
 p3
 
-p23<-subplot(style(p2, showlegend = F), p3,shareX = TRUE, titleY=TRUE,margin=.1)
+p23<-subplot(style(p2, showlegend = F), p3, nrows=2,shareX = TRUE, margin=.05)
 p23
 htmlwidgets::saveWidget(as_widget(p23), "decompCarbon/Fig5_organicMatter.html")
 

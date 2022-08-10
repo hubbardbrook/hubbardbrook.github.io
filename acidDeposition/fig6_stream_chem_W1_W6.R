@@ -253,8 +253,12 @@ dt2$water_year<-as.factor(dt2$waterYr)
 
 ##
 # this shows all the data available for DOC values
+library(ggplot2)
 
-streamview<-ggplot(dt2, aes(x=waterYr, y=DOC, group=waterYr, col=DOY))+geom_boxplot+geom_line()+
+ggplot(dt2, aes(x=waterYr, y=DOC, group=waterYr, col=DOY))+geom_point()+geom_line()+
+  theme_bw()
+
+ggplot(dt2, aes(x=waterYr, y=DOC, group=waterYr, col=DOY))+geom_boxplot+geom_line()+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   facet_wrap(~site, scales="free_y")+
   ggtitle("DOC data availability. Each line is a year. Figure shows data going back to 1980 ")+
@@ -350,21 +354,106 @@ ddd
 
 htmlwidgets::saveWidget(as_widget(ddd), "acidDeposition/fig6_steam_chem_facet_wrapped.html")
 
+#############################################################################################
 
 
-#For figure 5
-# dsum<-aggregate(list(annSO4=f6$SO4, annNO3=f6$NO3, annpH=f6$pH, annANC=f6$ANC960, annAl=f6$Al_ICP, ann2DOC=f6$DOC), by=list(waterYr=f6$waterYr,site=f6$site ),FUN="mean", na.rm=T)
-# head(dsum)
-# 
-# 
-# library(tidyr)
-# dsug<-gather(dsum, "vars","value", 3:8)
-# 
-# table(dsug$vars)
-# 
-# dsug[dsug$vars=="annSO4","Variable"]<-"SO4 (eq/L)"
-# dsug[dsug$vars=="annNO3","Variable"]<-"NO3 (eq/L)"
-# dsug[dsug$vars=="annpH","Variable"]<-"pH"
-# dsug[dsug$vars=="annANC","Variable"]<-"ANC (umol/L)"
-# dsug[dsug$vars=="annAl","Variable"]<-"Al (umol/L)"
-# dsug[dsug$vars=="ann2DOC","Variable"]<-"DOC (umol/L)"
+
+
+###############################################################################################
+
+#   Now with new data from Mike Vlah
+###############################################################################################
+st<-read.csv("C:\\Users\\bears\\Downloads\\HubbardBrook_weekly_stream_chemistry.csv")
+
+head(st)
+
+# Calculate the annual means
+dsum<-aggregate(list(annCa=st$Ca, annSiO2=st$SiO2, annpH=st$pH, annANC=st$ANC960, annAl=st$Al_ICP, annDOC=st$DOC), by=list(waterYr=st$waterYr,site=st$site ),FUN="mean", na.rm=T)
+head(dsum)
+
+d<-gather(dsum, "vars","value",3:8)
+
+d1<-d[d$site=="W1",]
+d6<-d[d$site=="W6",]
+
+
+da<-rbind(d1,d6)
+head(da)
+
+da[da$vars=="annCa","Variable"]<-"Mean annual Ca"
+da[da$vars=="annSiO2","Variable"]<-"Mean annual SiO2"
+da[da$vars=="annpH","Variable"]<-"Mean annual pH"
+da[da$vars=="annANC","Variable"]<-"Mean annual ANC"
+da[da$vars=="annAl","Variable"]<-"Mean annual Al"
+da[da$vars=="annDOC","Variable"]<-"Mean annual DOC"
+
+da[da$site=="W6","Site"]<-"W6 reference watershed"
+da[da$site=="W1","Site"]<-"W1 Calcium treatment"
+
+
+da$Variable<-factor(da$Variable, levels=c("Mean annual Ca","Mean annual SiO2","Mean annual pH","Mean annual ANC","Mean annual Al", "Mean annual DOC" ))
+
+head(da)
+# this shows all the data available for nitrate for the stream gauge in watershed 6
+dd<-ggplot(da, aes(x=waterYr, y=value , col=Site))+geom_point(aes(shape=Site))+geom_line()+
+  scale_shape_manual(values=c(1,19))+
+  scale_color_manual(values=c("grey","black"))+
+  geom_vline(aes(xintercept=1999), linetype="dashed")+
+  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  ylab("Analyte ")+
+  facet_wrap(~Variable, nrow=6, scales="free_y")
+dd
+ddd<-ggplotly(dd)
+
+
+
+### Fig 5 is just W6
+st$s
+f5<-aggregate(list(annSO4=st$SO4, annNO3=st$NO3, annpH=st$pH, annANC=st$ANC960, annAl=st$Al_ICP, annDOC=st$DOC), by=list(waterYr=st$waterYr,site=st$site ),FUN="mean", na.rm=T)
+head(f5)
+d6<-f5[f5$site=="W6",]
+
+d6<-gather(d6, "vars","value",3:8)
+
+
+
+d6[d6$vars=="annSO4","Variable"]<-"Mean annual SO4"
+d6[d6$vars=="annNO3","Variable"]<-"Mean annual NO3"
+d6[d6$vars=="annpH","Variable"]<-"Mean annual pH"
+d6[d6$vars=="annANC","Variable"]<-"Mean annual ANC"
+d6[d6$vars=="annAl","Variable"]<-"Mean annual Al"
+d6[d6$vars=="annDOC","Variable"]<-"Mean annual DOC"
+
+d6[d6$site=="W6","Site"]<-"W6 reference watershed"
+d6[d6$site=="W1","Site"]<-"W1 Calcium treatment"
+
+
+d6$Variable<-factor(d6$Variable, levels=c("Mean annual SO4","Mean annual NO3","Mean annual pH","Mean annual ANC","Mean annual Al", "Mean annual DOC" ))
+
+head(d6)
+# this shows all the data available for nitrate for the stream gauge in watershed 6
+dd<-ggplot(d6, aes(x=waterYr, y=value ))+geom_point()+geom_line()+
+  scale_shape_manual(values=c(1,19))+
+  scale_color_manual(values=c("grey","black"))+
+  geom_vline(aes(xintercept=1999), linetype="dashed")+
+  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  ylab("Analyte ")+
+  facet_wrap(~Variable, nrow=6, scales="free_y")
+dd
+
+
+head(f5)
+names(st)
+
+s6<-gather(st, "vars","value",18:39)
+head(s6)
+ggplot(s6, aes(x=waterYr, y=value, col=site ))+geom_point()+geom_line()+
+  geom_vline(aes(xintercept=1999), linetype="dashed")+
+  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  ylab("Analyte ")+
+  facet_wrap(~vars, nrow=6, scales="free_y")
+
+
+
+
+

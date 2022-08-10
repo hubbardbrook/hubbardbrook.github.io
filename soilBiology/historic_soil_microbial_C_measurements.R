@@ -151,7 +151,7 @@ buj<-uj[uj$Treatment=="BearBrook",]
 ##########
 biocav<-aggregate(list(BIOC=buj$BIOC), by=list(Year=buj$Year, Horizon=buj$Horizon), FUN="mean", na.rm=T)
 
-
+head(biocav)
 
 microC<-ggplot(biocav, aes(x=Year, y=BIOC, col=Horizon))+
   geom_point()+geom_line()+
@@ -310,20 +310,22 @@ nmin$nitse<-nse$NIT
 table(nmin$Watershed)
 nmin[nmin$WS=="BearBrook", "Watershed"]<-"West of W6"
 nmin[nmin$WS=="W1", "Watershed"]<-"W1"
+
+nmin$Watershed<-factor(nmin$Watershed, levels=c("West of W6","W1"))
 head(nmin)
 
-dodge<-position_dodge(.8)
+dodge<-position_dodge(1)
 nitgraph<-ggplot(nmin[nmin$Year>1997,], aes(x=Year, y=NIT , fill=Watershed))+
-  geom_bar(stat="identity",position=dodge)+
+  geom_bar(stat="identity",position=position_dodge())+
   scale_fill_manual(values=c("dark grey","light grey"))+
   geom_errorbar(aes(ymin=NIT-nitse, ymax=NIT+nitse), width=0.2, position=dodge)+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   ylab("Potential net nitrification (mg N / kg / day)")+
-  geom_text(aes(x=2001, y=18, label="Wollastonite added"),size=4, color="blue") +
+  geom_text(aes(x=2002, y=18, label="Wollastonite added"),size=4, color="blue") +
   geom_segment(x = 2000 , y= 2, xend = 2000, yend = 17,col="blue",
                arrow = arrow(length = unit(0.03, "npc"), ends = "both"))+
   scale_x_continuous(breaks =round(seq(1998, max(nmin$Year), by = 1)))+
-  theme(axis.text.x = element_text(angle = 90))
+  theme(axis.text.x = element_text(angle = 90),  text=element_text(size=12))
 
 nitgraph
 
@@ -333,25 +335,36 @@ mingraph<-ggplot(nmin[nmin$Year>1997,], aes(x=Year, y=MIN , fill=Watershed))+geo
   geom_errorbar(aes(ymin=MIN-minse, ymax=MIN+minse), width=0.2, position=dodge)+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   ylab("Potential net N mineralization (mg N / kg / day)")+
-  geom_text(aes(x=2003, y=35, label="Wollastonite added"),size=4, color="blue") +
+  geom_text(aes(x=2002, y=35, label="Wollastonite added"),size=4, color="blue") +
   geom_segment(x = 2000 , y= 5, xend = 2000, yend = 32,col="blue",
                arrow = arrow(length = unit(0.03, "npc"), ends = "both"))+
   scale_x_continuous(breaks =round(seq(1998, max(nmin$Year), by = 1)))+
-  theme(axis.text.x = element_text(angle = 90))
+  theme(axis.text.x = element_text(angle = 90),  text=element_text(size=12))
 
 
 
-mi<-ggplotly(mingraph,legendgroup = ~Watershed)
-ni<-ggplotly(nitgraph,legendgroup = ~Watershed, showlegend=FALSE)
+
+m <- list(
+  l = 200,
+  r = 50,
+  b = 100,
+  t = 100,
+  pad = 10
+)
 
 
-plotfinal<-subplot(mi,ni, nrows=1,
+mi<-ggplotly(mingraph,legendgroup = ~Watershed)%>%
+  layout(margin=m)
+ni<-ggplotly(nitgraph,legendgroup = ~Watershed)%>%
+  layout(margin=m)
+
+
+plotfinal<-subplot(style(mi, showlegend = F),ni, nrows=2,
                    shareX = TRUE, titleY=TRUE)
 
 plotfinal
 # this line writes the html file to create interactive graphs for the online book
 htmlwidgets::saveWidget(as_widget(plotfinal), "NitrogenCycling/fig5_Nmin_Groffman.html")
-
 
 
 
