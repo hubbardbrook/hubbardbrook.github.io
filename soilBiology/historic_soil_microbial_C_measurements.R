@@ -158,7 +158,7 @@ microC<-ggplot(biocav, aes(x=Year, y=BIOC, col=Horizon))+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   labs(col='Soil horizon')+
   scale_color_manual(values=c("deepskyblue2","orange","grey"))+
-  ylab("Microbial biomass C (mg/kg)")+guides(col="none")
+  ylab("Microbial biomass (mg C/kg)")+guides(col="none")
 microC
 picroC<-ggplotly(microC)
 picroC
@@ -176,7 +176,7 @@ microN<-ggplot(bionav, aes(x=Year, y=BION, col=Horizon))+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   labs(col='Soil horizon')+
   scale_color_manual(values=c("deepskyblue2","orange","grey"))+
-  ylab("Microbial biomass N (mg/kg)")+guides(col="none")+guides(col="none")
+  ylab("Microbial biomass nitrogen (mg N/kg)")+guides(col="none")+guides(col="none")
 
 picroN<-ggplotly(microN)
 picroN
@@ -216,7 +216,7 @@ microresp<-ggplot(respav, aes(x=Year, y=Resp, col=Horizon))+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   labs(col='Soil horizon')+
   scale_color_manual(values=c("deepskyblue2","orange","grey"))+
-  ylab("Respiration (mg/kg/day)")+guides(col="none")
+  ylab("Microbial respiration (mg C/kg/day)")+guides(col="none")
 microresp
 picroresp<-ggplotly(microresp)
 picroresp
@@ -321,7 +321,7 @@ nitgraph<-ggplot(nmin[nmin$Year>1997,], aes(x=Year, y=NIT , fill=Watershed))+
   geom_errorbar(aes(ymin=NIT-nitse, ymax=NIT+nitse), width=0.2, position=dodge)+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   ylab("Potential net nitrification (mg N / kg / day)")+
-  geom_text(aes(x=2002, y=18, label="Wollastonite added"),size=4, color="blue") +
+  geom_text(aes(x=2001, y=18, label="Wollastonite added"),size=4, color="blue") +
   geom_segment(x = 2000 , y= 2, xend = 2000, yend = 17,col="blue",
                arrow = arrow(length = unit(0.03, "npc"), ends = "both"))+
   scale_x_continuous(breaks =round(seq(1998, max(nmin$Year), by = 1)))+
@@ -335,7 +335,7 @@ mingraph<-ggplot(nmin[nmin$Year>1997,], aes(x=Year, y=MIN , fill=Watershed))+geo
   geom_errorbar(aes(ymin=MIN-minse, ymax=MIN+minse), width=0.2, position=dodge)+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   ylab("Potential net N mineralization (mg N / kg / day)")+
-  geom_text(aes(x=2002, y=35, label="Wollastonite added"),size=4, color="blue") +
+  geom_text(aes(x=2001, y=35, label="Wollastonite added"),size=4, color="blue") +
   geom_segment(x = 2000 , y= 5, xend = 2000, yend = 32,col="blue",
                arrow = arrow(length = unit(0.03, "npc"), ends = "both"))+
   scale_x_continuous(breaks =round(seq(1998, max(nmin$Year), by = 1)))+

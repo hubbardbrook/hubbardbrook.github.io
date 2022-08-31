@@ -75,6 +75,10 @@ expand$wyear<-w.year # add water year as a column to precip dataset
 
 head(expand,50)
 
+
+
+
+
 expav<-aggregate(list(DAY=expand$DAY), by=list(SEASON=expand$SEASON, Year=expand$Year, SPECIES=expand$SPECIES, SITE=expand$SITE), FUN="mean", na.rm=T)
 
 # We have a data column, but its not formatted as a date
@@ -84,13 +88,90 @@ air$Year<-year(air$DATE)
 expav$seasp<-paste( expav$SPECIES, expav$SEASON)
 expav$seasi<-paste( expav$SPECIES, expav$SITE,  expav$SEASON)
 
+head(expav)
 
-e1<-ggplot(expav, aes(x=Year, y=DAY, col=SPECIES, group=seasp))+geom_point()+geom_line()+
+# give top bottom code
+expav[expav$SITE=="1B","Elevation"]<-"Bottom"
+expav[expav$SITE=="4B","Elevation"]<-"Bottom"
+expav[expav$SITE=="5B","Elevation"]<-"Bottom"
+expav[expav$SITE=="7B","Elevation"]<-"Bottom"
+expav[expav$SITE=="4T","Elevation"]<-"Top"
+expav[expav$SITE=="5T","Elevation"]<-"Top"
+expav[expav$SITE=="6T","Elevation"]<-"Top"
+expav[expav$SITE=="7T","Elevation"]<-"Top"
+expav[expav$SITE=="HQ","Elevation"]<-"HQ"
+
+expav$Elevation<-factor(expav$Elevation, levels=c("Top","Bottom","HQ"))
+
+table(expav$SPECIES)
+expav[expav$SPECIES=="ACSA3", "Species"]<-"Sugar maple"
+expav[expav$SPECIES=="BEAL2", "Species"]<-"Yellow birch"
+expav[expav$SPECIES=="FAGR", "Species"]<-"American beech"
+
+
+expav$SEASON<-factor(expav$SEASON, levels=c("SPRING","FALL"))
+
+
+e1<-ggplot(expav, aes(x=Year, y=DAY, col=Elevation, group=seasp))+geom_point()+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  ylab("Date of Leaf Expansion")+ labs(col='Species')
-
+  ylab("Date of year")+ labs(col='Site ID')+
+  facet_wrap(Species~ SEASON, ncol=2, scales="free_y")+
+  geom_smooth(method="lm")
+e1
 p1<-ggplotly(e1)
 p1
 
+
+
+av<-aggregate(list(DAY=expav$DAY), by=list(Year=expav$Year, SEASON=expav$SEASON, Species=expav$Species), FUN="mean")
+st.err <- function(x) {  sd(x)/sqrt(length(x))}
+se<-aggregate(list(DAYse=expav$DAY), by=list(Year=expav$Year, SEASON=expav$SEASON, Species=expav$Species), function(x) sd(x))
+head(se)
+av$SE<-se$DAYse
+
+
+head(av)
+
+av$seasp<-paste( av$SPECIES, expav$SEASON)
+av$Year<-as.integer(av$Year)
+av$SEASON<-factor(av$SEASON, levels=c("SPRING","FALL"))
+
+
+
+#
+
+
+
+
+ggplot(av, aes(Year))+
+  geom_ribbon(aes( ymin = DAY-SE, ymax = DAY + SE), fill = "grey70") +
+  geom_line(aes(x=Year, y = DAY))+facet_wrap(Species~SEASON, ncol=2, scales="free_y")+
+  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  geom_point(expav, mapping=aes(x=Year, y=DAY, col=SITE))+
+  
+
+str(av)
+
+av$Elevation<-"average"
+av$SITE<-"average"
+
+head(expav)
+## try 3!
+ggplot(expav, aes(x=Year, y=DAY, col=SITE, group=seasp))+
+  geom_smooth(method="lm", se=F)+
+  geom_ribbon(data=av, mapping=aes(x=Year, ymin = DAY-SE, ymax = DAY + SE), fill = "grey70") +
+  geom_line(data=av, mapping=aes(x=Year, y = DAY))+
+  geom_point()+
+    theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  ylab("Date of year")+ labs(col='Site ID')+
+  facet_wrap(Species~ SEASON, ncol=2, scales="free_y")+
+scale_color_manual(values=c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7",
+                            "purple","black","red"))
+  
+
+  
+  
+  
+## sO i have a ssy, season, species, year average...
 
    htmlwidgets::saveWidget(as_widget(p1), "climateChange/Leaf_expansion_R.html")

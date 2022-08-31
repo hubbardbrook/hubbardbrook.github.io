@@ -1,0 +1,12 @@
+"TABLE_NAME","WETDEP"
+"COMMENTS","Annuual wet concentrations and deposition at CASTNET site locations.  Concentration values are from the interpolated concentrations of NADP/NTN and deposition values are from adjusted PRISM wet deposition grids, as calculated by the Arc AML script, /data/arc/amls/prism.aml.  In ArcINFO use, run prism castnet <year>
+<a href=""http://www.epa.gov/castnet/data-use-and-citation"">Recommended Citation</a> "
+"LAST_UPDATE","2020-11-09"
+"RECORD_COUNT","0"
+"
+"
+"
+"
+"Data Codes Contained in File:"
+"
+"

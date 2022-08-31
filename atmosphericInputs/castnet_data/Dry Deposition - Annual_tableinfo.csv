@@ -1,0 +1,12 @@
+"TABLE_NAME","DRYDEP_ANNUAL_WEB"
+"COMMENTS","Annual aggregates of dry deposition flux, calculated from weekly aggregates of dry deposition velocities (MODEL_OUTPUT_WEEK) and measured concentrations (DRYCHEM_WEEK). Missing hourly deposition velocities were replaced with hourly averages, where available.
+<a href=""http://www.epa.gov/castnet/data-use-and-citation"">Recommended Citation </a> "
+"LAST_UPDATE","2022-08-19"
+"RECORD_COUNT","0"
+"
+"
+"
+"
+"Data Codes Contained in File:"
+"
+"
