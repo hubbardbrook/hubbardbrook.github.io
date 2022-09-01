@@ -1,38 +1,11 @@
+## Make a figure of phosphate export from W5 and W6
 
+## Alex Young  alexyoung.116@gmail.com
 
-
-w5vol<-read.csv("phosphorus/Campbell_po4_flow_mm/ws5_stream_WY_volwt_conc.csv")
-w5vol$watershed<-"W5"
-w5vol$PO4_volwt
-if (class(w5vol$PO4_volwt)=="factor") w5vol$PO4_volwt <-as.numeric(levels(w5vol$PO4_volwt))[as.integer(w5vol$PO4_volwt) ]               
-if (class(w5vol$PO4_volwt)=="character") w5vol$PO4_volwt <-as.numeric(w5vol$PO4_volwt)
-
-w5vol$PO4_volwt <- ifelse((trimws(as.character(w5vol$PO4_volwt ))==trimws("-888.88")),NA,w5vol$PO4_volwt )               
-suppressWarnings(w5vol$PO4_volwt  <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(w5vol$PO4_volwt ))==as.character(as.numeric("-888.88"))),NA,w5vol$PO4_volwt ))
-
-
-head(w5vol)
-
-
-w5po4<-read.csv("phosphorus/Campbell_po4_flow_mm/ws5_stream_WY_flux_gHa.csv")
-w5po4$watershed<-"W5"
-w6po4<-read.csv("phosphorus/Campbell_po4_flow_mm/ws6_stream_WY_flux_gHa.csv")
-w6po4$watershed<-"W6"
-head(w5po4)
-cam<-rbind(w5po4, w6po4)
-head(cam)
-
-if (class(cam$PO4_flux)=="factor") cam$PO4_flux <-as.numeric(levels(cam$PO4_flux))[as.integer(cam$PO4_flux) ]               
-if (class(cam$PO4_flux)=="character") cam$PO4_flux <-as.numeric(cam$PO4_flux)
-
-cam$PO4_flux <- ifelse((trimws(as.character(cam$PO4_flux))==trimws("-888.88")),NA,cam$PO4_flux)               
-suppressWarnings(cam$PO4_flux <- ifelse(!is.na(as.numeric("-888.88")) & (trimws(as.character(cam$PO4_flux))==as.character(as.numeric("-888.88"))),NA,cam$PO4_flux))
-
-
-
-
-ggplot(cam, aes(x=WaterYear, y=PO4_flux, col=watershed))+geom_point()
-
+library(ggplot2)
+library(tidyr)
+library(plotly)
+library(lubridate)
 
 # read in monthly fluxes for Chemistry of streamwater data for WS6
 # Package ID: knb-lter-hbr.8.17 Cataloging System:https://pasta.edirepository.org.

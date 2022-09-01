@@ -1,0 +1,26 @@
+{
+    "id": "64715293",
+    "path": "~/GitHub/hubbardbrook.github.io/soilBiology/historic_soil_microbial_C_measurements.R",
+    "project_path": "soilBiology/historic_soil_microbial_C_measurements.R",
+    "type": "r_source",
+    "hash": "1215836705",
+    "contents": "",
+    "dirty": false,
+    "created": 1662048792050.0,
+    "source_on_save": false,
+    "relative_order": 3,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "217,47",
+        "scrollLine": "205"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1662058713,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1662058713821,
+    "read_only": false,
+    "read_only_alternatives": []
+}
