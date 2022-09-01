@@ -208,11 +208,7 @@ names(dt2)
 ###########################
 
 
-
-
-
-
-
+# Lets make figure 1 in the nitrogen chapter.
 
 # make a new DATE column, formatted as a date.
 dt2$DATE<-as.Date(dt2$date, format="%y/%m/%d")
