@@ -1,0 +1,310 @@
+
+
+library(raster)
+library(rgdal)
+
+library(FedData)
+
+
+
+##   This code could be used to directly download the NLCD raster
+# vepPolygon <- polygon_from_extent(raster::extent(672800,740000,4102000,4170000), 
+#                                   proj4string='+proj=utm +datum=NAD83 +zone=12')
+# NLCD <- get_nlcd(template=vepPolygon, label='VEPIIN')
+# # Plot with raster::plot
+# plot(NLCD)
+
+
+#############
+
+library(FedData)
+library(rasterVis)
+library(raster)
+library(sp)
+library(rgdal)
+library(reshape2)
+library(treemapify)
+library(ggplot2)
+library(kableExtra)
+library(animation)
+library(scales)
+
+
+
+## You can download tifs of NLCD from this website:  https://www.mrlc.gov/viewer/?
+
+
+# set your working directory
+setwd("C:/Users/bears/Downloads/bmore_NLCD_R")
+
+
+
+
+
+
+# Load a single raster using the raster() function This is the  
+r1<-raster("NLCD_2001_Land_Cover_L48_20210604_42i3lzqrbqXpdeBfLB7X.tiff")
+r2<-raster("NLCD_2004_Land_Cover_L48_20210604_42i3lzqrbqXpdeBfLB7X.tiff")
+r3<-raster("NLCD_2006_Land_Cover_L48_20210604_42i3lzqrbqXpdeBfLB7X.tiff")
+r4<-raster("NLCD_2008_Land_Cover_L48_20210604_42i3lzqrbqXpdeBfLB7X.tiff")
+r5<-raster("NLCD_2011_Land_Cover_L48_20210604_42i3lzqrbqXpdeBfLB7X.tiff")
+r6<-raster("NLCD_2013_Land_Cover_L48_20210604_42i3lzqrbqXpdeBfLB7X.tiff")
+r7<-raster("NLCD_2016_Land_Cover_L48_20210604_42i3lzqrbqXpdeBfLB7X.tiff")
+r8<-raster("NLCD_2019_Land_Cover_L48_20210604_42i3lzqrbqXpdeBfLB7X.tiff")
+
+
+s<-stack(r1,r2,r3,r4,r5,r6,r7,r8)
+
+
+#Let's plot this stack and take a look at it. 
+plot(s)
+
+
+###########
+
+
+# Load in the NLCD legend, colors and descriptions from package FedData. 
+legend<-pal_nlcd()
+legend
+
+# Make a vector of all the values we have in our study area and select those from the legend object. 
+vals<-unique(s[[5]])
+df<-legend[legend$code %in% vals,]
+
+
+# Alright, now let's make this plot pretty, working with 2016 data. We're going to use leveplot() from package rasterVis. First, we need to recognize it as a categorical raster using ratify(): 
+rat<-ratify(s[[5]])
+
+
+# I used some code from the creator of rasterVis to make a custom legend:
+myKey <- list(rectangles=list(col = df$color),
+              text=list(lab=df$description),
+              space='left',
+              columns=1,
+              size=2,
+              cex=.6)
+
+# And here we plot it minus the axes, ticks and labels. 
+rat
+
+levelplot(rat, att='ID', 
+          col.regions=df$color,
+          par.settings = list(axis.line = list(col = "transparent"), 
+                              strip.background = list(col = 'transparent'), 
+                              strip.border = list(col = 'transparent')), 
+          scales = list(col = "transparent"),
+          colorkey=F,
+          key=myKey)
+
+
+###############
+
+# Make a list of years in string format for titles
+years.list<-list("2001", "2004", "2006", "2008", "2011", "2013", "2016","2019")
+
+
+saveGIF(
+  {
+    for(i in c(1:nlayers(s))){
+      rat<-ratify(s[[i]])
+      a<-levelplot(rat, att='ID', 
+                   col.regions=df$color,
+                   par.settings = list(axis.line = list(col = "transparent"), 
+                                       strip.background = list(col = 'transparent'), 
+                                       strip.border = list(col = 'transparent')), 
+                   scales = list(col = "transparent"),
+                   main=paste0("Baltimore region", years.list[[i]]),
+                   colorkey=F,
+      )
+      print(a)
+    }
+  }, interval=0.8, movie.name="szoom.gif", ani.width = 600)
+
+
+
+
+
+
+##################
+
+
+
+# We have this data frame of NLCD classes:
+df
+
+# And, using the freq() function, we can count the number of cells in each class.
+
+# So our goal: create a data frame (a table) where each row is a land cover class, and there is one column for each time step with the pixel count for each class. I find the greatest challenge of building a for loop is conceptualizing its structure.
+
+# So I usually start by experimenting and finding a method that works on one layer:  
+
+test<-merge(df, freq(s[[1]]), by.x="code" ,by.y="value", all.y=F, all.x=T)
+names(test)[ncol(test)]<-2001
+test
+
+# OK, looks good. Now, we want to do this for each year. We could copy and paste and do the above for all seven layers. 
+# But what if we had 100 layers? What happens when we want to repeat this task on another dataset with different names?
+# We need to automate, and we do that by looping through each layer to perform the task we wrote above. 
+
+# we'll make a vector of all the years in our study period, then loop through the positions (1-7), merging the frequency information into the data frame and naming the column after that year. 
+plot(s)
+
+years<-c(2001, 2004, 2006, 2008, 2011, 2013,2016, 2019)
+dim(s)
+
+d<-df
+
+
+for (i in 1:length(years)) {
+  d<-merge(d, freq(s[[i]]), by.x="code" ,by.y="value", all.y=F, all.x=T)
+  names(d)[ncol(d)]<-paste0("pix_", years[[i]])
+}
+
+# Now, a few percent change calculations:
+head(d)
+
+d$square.mile.change<-(d$pix_2013 - d$pix_2001) * 30 * 30 * 0.00000038610
+
+d$percentchange<-(d$pix_2013 - d$pix_2001)/d$pix_2001
+d$prop2013<-d$pix_2013/sum(d$pix_2013)
+
+d$percentchange.2001.2013<-paste(round(100*d$percentchange, 2), "%", sep="")
+d$percent.area.2013<-paste(round(100*d$prop2013, 2), "%", sep="")
+
+# Make it a pretty table with kable:
+names(d)
+
+kable(d[,c(3,12,15,16)])  %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F)
+
+# And just for fun, aggregate it by class for another perspective
+
+dfc<-aggregate(prop2016 ~ class, d[,c(2,13,14)], sum)
+dfc$prop2016<-paste(round(100*dfc$prop2016, 2), "%", sep="")
+
+kable(dfc)  %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F)
+
+
+############
+
+
+#Ever heard of the tree map?  I hadn't. 
+
+# To start, we need to shift the data frame from "wide" format to "long" format, because GGplot likes it that way.
+head(d)
+dn<- melt(d, id.vars = 1:4)
+
+# Check out what that did - see how all of the land cover types are in one column now?
+dn$value<-as.numeric(dn$value)
+head(dn)
+
+# For this first treemap, we want to summarize the land cover area by class, not individual description. So we need to aggregate by adding all of the values for each class together. 
+table(dn$variable)
+dn13<-dn[dn$variable=="pix_2013", ]
+dn13
+
+dc<-aggregate(list(value=dn13$value), by=list(class=dn13$class), FUN="sum", na.rm=T)
+head(dc)
+
+# Here are the colors from the palette dataframe in the order we'll need them for this plot. I also made a vector of labels so that I could format them exactly the way I want. 
+
+class_pal<-c("#B2ADA3", "#ED0000", "#68AA63", "#B5C98E", "#DBD83D", "#CCBA7C", "#476BA0", "#BAD8EA" )
+class_labels<-c("barren", "developed", "forest", "grassland", "agriculture", "shrubland", "water", "wetlands")
+
+
+######
+
+
+c<-ggplot(dc, aes(area=value, fill=class, label=class_labels)) +
+  geom_treemap() +
+  geom_treemap_text(grow=T, color="grey20", place="bottomleft")+
+  scale_fill_manual(values=class_pal)+
+  theme(legend.position = "none")+ggtitle("Baltimore")
+c
+######################
+
+
+
+
+
+##########################################################################
+
+head(d)
+library(tidyr)
+library(gganimate)
+library(gapminder)
+library(lubridate)
+e<-d[,2:12]
+e
+
+bmore<-gather(e, "series","value",4:11)
+
+
+
+str(bmore)
+bm<-aggregate(list(value=bmore$value), by=list(class=bmore$class, series=bmore$series), FUN="sum")
+
+bm$yearchar<-substring(bm$series, 5)
+bm$Year<-year(ymd(paste0(bm$yearchar,"-01-01")))
+
+
+head(bm)
+
+ggplot(bm, aes(x=class, y=value, col=class))+geom_bar(stat="identity")+
+  # Here comes the gganimate specific bits
+
+    labs(title = 'Year: {frame_time}', x = 'NLCD class', y = 'acres') +
+  transition_time(Year) +
+  ease_aes('linear')
+
+
+
+ggplot(bm, aes(x=class, y=value, col=class))+geom_bar(stat="identity")+
+transition_states(
+  Year,
+  transition_length = 2,
+  state_length = 1) +
+  enter_fade() + 
+  exit_shrink() +
+  ease_aes('sine-in-out')
+
+
+#######
+
+
+p<-ggplot(bm, aes(x=class, y=value, fill=class))+geom_bar(stat="identity", col="black")
+
+
+p+ transition_time(year) +
+  labs(title = "Year: {frame_time}")
+
+  
+
+p<-ggplot(bm, aes(x=class, y=value, col=class))+geom_point()
+
+p+ transition_time(Year) +
+  labs(title = "Year: {frame_time}") +
+  shadow_mark(alpha = 0.3, size = 0.5)
+
+
+#################
+
+p<-ggplot(bm, aes(x=Year, y=value, group=class, col=class))+geom_line()
+
+p
+
+
+p + 
+  geom_point() +
+  transition_reveal(Year)+
+  scale_color_viridis_d() +
+  labs(x = "Year", y = "Raster value") +
+  theme(legend.position = "bottom")+
+  ggtitle("Baltimore NLCD change over time")+
+   theme(text=element_text(size=20))
+
+
+
+
+
