@@ -18,7 +18,7 @@ library("gridExtra")
 library(plotly)
 
 #Download streamflow data by watershed
-inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/2/11/1254d17cbd381556c05afa740d380e78" 
+inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/2/14/8c8494334113ddab7ba6591cc6fcd8d3" 
 infile1 <- tempfile()
 try(download.file(inUrl1,infile1,method="curl"))
 if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
@@ -53,7 +53,7 @@ suppressWarnings(dt1$Flag <- ifelse(!is.na(as.numeric("NA")) & (trimws(as.charac
 streamflow <- dt1
 
 #Download precipitation data by watershed
-inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/14/14/c606bfe2f2deb3fa3eabf692ae15f02d" 
+inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/14/18/c606bfe2f2deb3fa3eabf692ae15f02d" 
 infile1 <- tempfile()
 try(download.file(inUrl1,infile1,method="curl"))
 if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
