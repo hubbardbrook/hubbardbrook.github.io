@@ -448,7 +448,7 @@ head(yom, 100)
   scale_color_manual(values=c("black","green"))+geom_line()+
   theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
                    axis.title.y = element_text(vjust = +2),
-                   plot.title = element_text(hjust = 0.5), text=element_text(size=24),legend.position=c(.8,.9))
+                   plot.title = element_text(hjust = 0.5), text=element_text(size=14),legend.position=c(.8,.9))
 g2
 
 
@@ -460,13 +460,11 @@ g3<-ggplot(yo[yo$Horizon=="Oa",], aes(x=Year, y=OM, col=Watershed))+geom_point()
    scale_color_manual(values=c("black","green"))+geom_line()+
    theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
                    axis.title.y = element_text(vjust = +2),
-                    plot.title = element_text(hjust = 0.5),text=element_text(size=24),legend.position=c(.8,.9))
+                    plot.title = element_text(hjust = 0.5),text=element_text(size=14),legend.position=c(.8,.9))
 g3
 
 
 library(plotly)
-
-my_patchwork=g2+g3
 
 m <- list(
   l = 200,
@@ -480,14 +478,15 @@ m <- list(
 p2<-ggplotly(g2)%>%
   layout(margin=m)
 p2 <- p2 %>%
-       layout(legend = list(orientation = "v", x = 0.8, y = 1.0))
+       layout(legend = list(orientation = "v", x = 0.7, y = 0.1))
 
 p2
 p3<-ggplotly(g3)%>%
   layout(margin=m)
 p3 <- p3 %>%
-       layout(legend = list(orientation = "v", x = 0.8, y = 1.0))
+       layout(legend = list(orientation = "v", x = 0.7, y = 1.0))
 p3
+
 
 
 htmlwidgets::saveWidget(as_widget(p2), "/home/users/mem/proj/hbrook/HBRIM/data/onlinebook/decompCarbon/Fig5A_organicMatter.html")
