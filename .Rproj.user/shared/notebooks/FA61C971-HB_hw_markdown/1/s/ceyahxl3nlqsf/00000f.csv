@@ -1,9 +1,0 @@
-"0","#visualize to become familiar with data
-gan<-ggplot(annairgrow, aes(x=wyear, y=avtemp))+
-  geom_point()+geom_line()+
-  ylab(""Growing season air temperature (C)"")+xlab(""Water year (June 1st)"")+
-  theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-"
-"2","Error in ggplot(annairgrow, aes(x = wyear, y = avtemp)) : 
-  object 'annairgrow' not found
-"
