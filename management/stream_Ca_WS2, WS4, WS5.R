@@ -21,7 +21,7 @@ library(ggplot2)
 # Contact:    -  Hubbard Brook Ecosystem Study  - hbr-im@lternet.edu
 # Stylesheet v2.11 for metadata conversion into program: John H. Porter, Univ. Virginia, jporter@virginia.edu 
 
-inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/4/17/a6aeef15070be913ee2f06f431b9b7a7" 
+inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/4/19/a6aeef15070be913ee2f06f431b9b7a7" 
 infile1 <- tempfile()
 try(download.file(inUrl1,infile1,method="curl"))
 if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
@@ -193,7 +193,7 @@ head(W2)
 # Contact:    -  Hubbard Brook Ecosystem Study  - hbr-im@lternet.edu
 # Stylesheet v2.11 for metadata conversion into program: John H. Porter, Univ. Virginia, jporter@virginia.edu 
 
-inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/6/17/54b3ae4a45a2bb6c7006c2ab45cf63b9" 
+inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/6/19/54b3ae4a45a2bb6c7006c2ab45cf63b9"
 infile1 <- tempfile()
 try(download.file(inUrl1,infile1,method="curl"))
 if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
@@ -365,7 +365,7 @@ W4$Watershed<-"W4"
 # Contact:    -  Hubbard Brook Ecosystem Study  - hbr-im@lternet.edu
 # Stylesheet v2.11 for metadata conversion into program: John H. Porter, Univ. Virginia, jporter@virginia.edu 
 
-inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/7/17/c08ebaccab4fee5fb60f4eee77f06cb3" 
+inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/7/19/c08ebaccab4fee5fb60f4eee77f06cb3" 
 infile1 <- tempfile()
 try(download.file(inUrl1,infile1,method="curl"))
 if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
@@ -536,7 +536,7 @@ W5$Watershed<-"W5"
 # Contact:    -  Hubbard Brook Ecosystem Study  - hbr-im@lternet.edu
 # Stylesheet v2.11 for metadata conversion into program: John H. Porter, Univ. Virginia, jporter@virginia.edu 
 
-inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/8/17/3312389e77cc5fd06bc8a7c9019de0ed" 
+inUrl1  <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/8/19/3312389e77cc5fd06bc8a7c9019de0ed" 
 infile1 <- tempfile()
 try(download.file(inUrl1,infile1,method="curl"))
 if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
@@ -903,21 +903,13 @@ g3<-ggplot(fa3) +
   geom_text(aes(x=1973, y=3.2, label="W5: whole tree harvest in 1983, 1984"),size=7 ,color="black") 
 g3
 
-  
-library(ggpubr)
 library(plotly)
 
-ggarrange(g1, g2 ,g3, nrow=3, legend="none")
-  
-############################################
-
-
-
+## form the plotly graphs
 p1<-ggplotly(g1)
 p2<-ggplotly(g2)
 p3<-ggplotly(g3)
+# combine the plots into a grid
+pfinal<-subplot(p1, p2, p3, nrows=3, shareX = TRUE, titleY=TRUE,margin=0.01)
 
-p123<-subplot(p1, p2, p3, shareX=T, nrows=3)
-
-p123
-htmlwidgets::saveWidget(as_widget(p123), "management/streamCa_W2_W4_W5_W6.html")
+htmlwidgets::saveWidget(as_widget(pfinal), "streamCa_W2_W4_W5_W6.html")

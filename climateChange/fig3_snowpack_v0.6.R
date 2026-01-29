@@ -1,6 +1,6 @@
 # Snow trends
 # Campbell 26 Nov 2021
-# 'plotlified' by Alex Young 15 June 2022
+# 'plotlyfied' by Alex Young 15 June 2022
 
 rm(list = ls())
 #setwd("C:/Fahey/living graphs/snowpack")
@@ -244,28 +244,11 @@ snow_days <- ggplot() +
   geom_text(aes(x=2000, y=175, label=paste0("Snow cover has decreased by ", duration_sen_slp , " days over ",snow_days_yr_count," years p = ",duration_sen_p)),size=4.5, col="darkgray") 
 
 
-  snow_days 
-
-
-# snow_depth_fixed <- set_panel_size(snow_depth, width  = unit(5, "in"), height = unit(2, "in"))
-# swe_depth_fixed <- set_panel_size(swe_depth, width  = unit(5, "in"), height = unit(2, "in"))
-# snow_days_fixed <- set_panel_size(snow_days, width  = unit(5, "in"), height = unit(2, "in"))
-# 
-# p1 <- as.grob(snow_depth_fixed)
-# p2 <- as.grob(swe_depth_fixed)
-# p3 <- as.grob(snow_days_fixed)
-# 
-# top_row <- plot_grid(p1, NULL, p2, NULL, p3, ncol = 1, rel_heights = c(1, -0.3, 1, -0.3, 1), align="hv") 
-# 
-# svg("snow_trends.svg", height = 8)
-# top_row
-# dev.off()
-
+snow_days 
 
 plot1 <- ggplotly(snow_depth)
 plot2 <- ggplotly(swe_depth)
 plot3 <- ggplotly(snow_days)
-
 
 # create single plot with 3 panels
 plotfinal <- subplot(plot1, plot2,  plot3,
@@ -275,3 +258,4 @@ plotfinal
 
 # this line writes the html file to create interactive graphs for the online book
 htmlwidgets::saveWidget(as_widget(plotfinal), "climateChange/fig_3_snow_depth_cover_swe.html")
+
