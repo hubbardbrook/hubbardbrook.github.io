@@ -213,6 +213,6 @@ fig <- fig %>%
     paper_bgcolor = "white"
   )
 
-htmlwidgets::saveWidget(as_widget(fig), "Fig5_Streams.html")
+htmlwidgets::saveWidget(as_widget(fig), "StreamChem-W6_longtermTrends.html")
 
 
