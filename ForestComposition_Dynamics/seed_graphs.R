@@ -184,6 +184,14 @@ plot5 <- ggplot(seeds, aes(x=YEAR, y=FAGR_diff)) +
     axis.text = element_text(color = "black", size = 12),
     axis.title = element_text(color = "black", size = 13)
   ) 
+plot5 <- plot5 %>%
+  layout(
+    modebar = list(
+      bgcolor = "grey",
+      color = "black",
+      activecolor = "#1B5E20"
+    )
+  )
 
 plot5
 
@@ -193,6 +201,15 @@ p2<-ggplotly(plot2)
 p4<-ggplotly(plot4)
 p5<-ggplotly(plot5) 
 
+p5 <- p5 %>%
+  layout(
+    modebar = list(
+      bgcolor = "white",
+      color = "black",
+      activecolor = "#1B5E20"
+
+    )
+  )
 # combine the plots into a grid
 plotfinal<-subplot(p1, p2, p4, p5, nrows=4,  
          shareX = TRUE, titleY=TRUE,margin=0.01)
