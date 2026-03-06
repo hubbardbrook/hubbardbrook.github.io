@@ -360,6 +360,10 @@ w6<-dt4[ , c(2,4,5,7,3)]
 head(w1)
 head(w6)
 
+
+
+
+
 om<-rbind(w1,w6)
 str(om)
 

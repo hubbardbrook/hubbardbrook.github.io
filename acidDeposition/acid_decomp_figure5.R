@@ -2,6 +2,8 @@ library(tidyverse)
 library(plotly)
 library(dplyr)
 
+setwd("~/mnt/HBRIM/data/onlinebookgraphs/acidDeposition")
+
 inUrl2 <- "https://pasta.lternet.edu/package/data/eml/knb-lter-hbr/208/14/024b6acc5cb2e03a14fff5558bbffc0c"
 infile2 <- tempfile()
 try(download.file(inUrl2,infile2,method="curl"))
